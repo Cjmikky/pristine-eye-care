@@ -8,19 +8,78 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Alert,
 } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { signInWithEmailAndPassword } from "firebase/auth";
 
 import Logo from "../components/Logo";
 import InputField from "../components/InputField";
 import PrimaryButton from "../components/PrimaryButton";
 import { RootStackParamList } from "../navigation/AppNavigator";
+import { auth } from "../firebase/config";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Login">;
 
 export default function LoginScreen({ navigation }: Props) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleLogin = async () => {
+    if (!email.trim()) {
+      Alert.alert("Validation", "Please enter your email.");
+      return;
+    }
+
+    if (!password.trim()) {
+      Alert.alert("Validation", "Please enter your password.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      await signInWithEmailAndPassword(
+        auth,
+        email.trim(),
+        password
+      );
+
+      Alert.alert("Success", "Login successful!");
+
+      navigation.replace("Dashboard");
+    } catch (error: any) {
+      let message = "Login failed.";
+
+      switch (error.code) {
+        case "auth/invalid-email":
+          message = "Invalid email address.";
+          break;
+
+        case "auth/user-not-found":
+          message = "No account found with this email.";
+          break;
+
+        case "auth/wrong-password":
+        case "auth/invalid-credential":
+          message = "Incorrect email or password.";
+          break;
+
+        case "auth/too-many-requests":
+          message =
+            "Too many attempts. Please try again later.";
+          break;
+
+        default:
+          message = error.message;
+      }
+
+      Alert.alert("Login Failed", message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -34,7 +93,9 @@ export default function LoginScreen({ navigation }: Props) {
         >
           <Logo />
 
-          <Text style={styles.title}>Welcome Back</Text>
+          <Text style={styles.title}>
+            Welcome Back
+          </Text>
 
           <Text style={styles.subtitle}>
             Sign in to continue to Pristine Eye Care.
@@ -42,6 +103,9 @@ export default function LoginScreen({ navigation }: Props) {
 
           <InputField
             placeholder="Email Address"
+            keyboardType="email-address"
+            autoCapitalize="none"
+            autoCorrect={false}
             value={email}
             onChangeText={setEmail}
           />
@@ -54,7 +118,9 @@ export default function LoginScreen({ navigation }: Props) {
           />
 
           <Pressable
-            onPress={() => navigation.navigate("ForgotPassword")}
+            onPress={() =>
+              navigation.navigate("ForgotPassword")
+            }
           >
             <Text style={styles.forgot}>
               Forgot Password?
@@ -62,8 +128,8 @@ export default function LoginScreen({ navigation }: Props) {
           </Pressable>
 
           <PrimaryButton
-            title="Sign In"
-            onPress={() => navigation.replace("Dashboard")}
+            title={loading ? "Signing In..." : "Sign In"}
+            onPress={handleLogin}
           />
 
           <View style={styles.footer}>
@@ -72,7 +138,9 @@ export default function LoginScreen({ navigation }: Props) {
             </Text>
 
             <Pressable
-              onPress={() => navigation.navigate("Signup")}
+              onPress={() =>
+                navigation.navigate("Signup")
+              }
             >
               <Text style={styles.link}>
                 Sign Up

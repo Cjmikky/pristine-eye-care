@@ -2,9 +2,10 @@ import React from "react";
 import {
   StyleSheet,
   TextInput,
+  TextInputProps,
 } from "react-native";
 
-interface Props {
+interface Props extends TextInputProps {
   placeholder: string;
   secureTextEntry?: boolean;
   value: string;
@@ -16,15 +17,21 @@ export default function InputField({
   secureTextEntry = false,
   value,
   onChangeText,
+  ...rest
 }: Props) {
   return (
     <TextInput
+      style={styles.input}
       placeholder={placeholder}
-      placeholderTextColor="#888"
+      placeholderTextColor="#888888"
       secureTextEntry={secureTextEntry}
       value={value}
       onChangeText={onChangeText}
-      style={styles.input}
+      autoCorrect={false}
+      selectionColor="#B3000F"
+      cursorColor="#B3000F"
+      underlineColorAndroid="transparent"
+      {...rest}
     />
   );
 }
@@ -34,11 +41,13 @@ const styles = StyleSheet.create({
     width: "100%",
     height: 56,
     borderWidth: 1,
-    borderColor: "#DDD",
+    borderColor: "#DDDDDD",
     borderRadius: 14,
     paddingHorizontal: 16,
-    fontSize: 16,
     marginTop: 16,
-    backgroundColor: "#FFF",
+    backgroundColor: "#FFFFFF",
+
+    color: "#222222",      // <-- makes typed text visible
+    fontSize: 16,
   },
 });
