@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   SafeAreaView,
   View,
@@ -6,11 +6,33 @@ import {
   StyleSheet,
   ScrollView,
   Pressable,
+  ActivityIndicator,
+  Alert,
 } from "react-native";
+import { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { signOut } from "firebase/auth";
+import { doc, getDoc } from "firebase/firestore";
+
+import { auth, db } from "../firebase/config";
+import { RootStackParamList } from "../navigation/AppNavigator";
+
+type Props = NativeStackScreenProps<
+  RootStackParamList,
+  "Dashboard"
+>;
 
 const PRIMARY = "#B3000F";
 
-export default function DashboardScreen() {
+export default function DashboardScreen({
+  navigation,
+}: Props) {
+  const [userName, setUserName] = useState("Loading...");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadUser();
+  }, []);
+
   const getGreeting = () => {
     const hour = new Date().getHours();
 
@@ -21,26 +43,102 @@ export default function DashboardScreen() {
     return "Good Night 🌙";
   };
 
-  // Temporary hardcoded name.
-  // We'll fetch this from Firebase in the next step.
-  const userName = "Chijioke Kelvin Wiche";
+  const loadUser = async () => {
+    try {
+      const currentUser = auth.currentUser;
+
+      if (!currentUser) {
+        setUserName("Guest");
+        return;
+      }
+
+      const docRef = doc(db, "users", currentUser.uid);
+
+      const docSnap = await getDoc(docRef);
+
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+
+        setUserName(data.fullName || "User");
+      } else {
+        setUserName(currentUser.email || "User");
+      }
+    } catch (error) {
+      console.log(error);
+      setUserName("User");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLogout = () => {
+    Alert.alert(
+      "Logout",
+      "Are you sure you want to logout?",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Logout",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await signOut(auth);
+
+              navigation.replace("Login");
+            } catch (error) {
+              console.log(error);
+
+              Alert.alert(
+                "Error",
+                "Unable to logout."
+              );
+            }
+          },
+        },
+      ]
+    );
+  };
 
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView
-        showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.greeting}>
-          {getGreeting()}
-        </Text>
+        <View style={styles.header}>
+          <View>
+            <Text style={styles.greeting}>
+              {getGreeting()}
+            </Text>
 
-        <Text style={styles.welcome}>
-          Welcome back,
-          <Text style={styles.userName}> {userName}</Text>
-        </Text>
+            {loading ? (
+              <ActivityIndicator
+                color={PRIMARY}
+                style={{ marginTop: 10 }}
+              />
+            ) : (
+              <Text style={styles.welcome}>
+                Welcome back,
+                <Text style={styles.userName}>
+                  {" "}
+                  {userName}
+                </Text>
+              </Text>
+            )}
+          </View>
 
-        {/* Appointment Card */}
+          <Pressable
+            style={styles.logoutButton}
+            onPress={handleLogout}
+          >
+            <Text style={styles.logoutText}>
+              Logout
+            </Text>
+          </Pressable>
+        </View>
 
         <View style={styles.card}>
           <Text style={styles.cardTitle}>
@@ -57,8 +155,6 @@ export default function DashboardScreen() {
             </Text>
           </Pressable>
         </View>
-
-        {/* Quick Actions */}
 
         <Text style={styles.sectionTitle}>
           Quick Actions
@@ -100,6 +196,13 @@ const styles = StyleSheet.create({
     padding: 20,
   },
 
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    marginBottom: 20,
+  },
+
   greeting: {
     fontSize: 20,
     fontWeight: "600",
@@ -110,13 +213,24 @@ const styles = StyleSheet.create({
   welcome: {
     fontSize: 18,
     color: "#777",
-    marginBottom: 20,
-    flexWrap: "wrap",
   },
 
   userName: {
     color: PRIMARY,
     fontWeight: "700",
+  },
+
+  logoutButton: {
+    backgroundColor: PRIMARY,
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    borderRadius: 10,
+  },
+
+  logoutText: {
+    color: "#FFF",
+    fontWeight: "700",
+    fontSize: 15,
   },
 
   card: {
@@ -171,7 +285,6 @@ const styles = StyleSheet.create({
     paddingVertical: 28,
     alignItems: "center",
     elevation: 3,
-
     shadowColor: "#000",
     shadowOpacity: 0.12,
     shadowRadius: 5,
