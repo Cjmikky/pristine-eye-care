@@ -8,20 +8,40 @@ import {
   Pressable,
 } from "react-native";
 
+const PRIMARY = "#B3000F";
+
 export default function DashboardScreen() {
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+
+    if (hour < 12) return "Good Morning 👋";
+    if (hour < 17) return "Good Afternoon ☀️";
+    if (hour < 20) return "Good Evening 🌇";
+
+    return "Good Night 🌙";
+  };
+
+  // Temporary hardcoded name.
+  // We'll fetch this from Firebase in the next step.
+  const userName = "Chijioke Kelvin Wiche";
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.content}
       >
-        <Text style={styles.greeting}>Good Morning 👋</Text>
+        <Text style={styles.greeting}>
+          {getGreeting()}
+        </Text>
 
-        <Text style={styles.name}>
-          Welcome to Pristine Eye Care
+        <Text style={styles.welcome}>
+          Welcome back,
+          <Text style={styles.userName}> {userName}</Text>
         </Text>
 
         {/* Appointment Card */}
+
         <View style={styles.card}>
           <Text style={styles.cardTitle}>
             Next Appointment
@@ -39,6 +59,7 @@ export default function DashboardScreen() {
         </View>
 
         {/* Quick Actions */}
+
         <Text style={styles.sectionTitle}>
           Quick Actions
         </Text>
@@ -46,22 +67,18 @@ export default function DashboardScreen() {
         <View style={styles.grid}>
           <Pressable style={styles.box}>
             <Text style={styles.icon}>👓</Text>
-            <Text style={styles.boxText}>Eye Test</Text>
+
+            <Text style={styles.boxText}>
+              Eye Test
+            </Text>
           </Pressable>
 
           <Pressable style={styles.box}>
             <Text style={styles.icon}>📅</Text>
-            <Text style={styles.boxText}>Appointments</Text>
-          </Pressable>
 
-          <Pressable style={styles.box}>
-            <Text style={styles.icon}>🛍️</Text>
-            <Text style={styles.boxText}>Shop</Text>
-          </Pressable>
-
-          <Pressable style={styles.box}>
-            <Text style={styles.icon}>📍</Text>
-            <Text style={styles.boxText}>Branches</Text>
+            <Text style={styles.boxText}>
+              Appointments
+            </Text>
           </Pressable>
         </View>
 
@@ -72,8 +89,6 @@ export default function DashboardScreen() {
     </SafeAreaView>
   );
 }
-
-const PRIMARY = "#B3000F";
 
 const styles = StyleSheet.create({
   container: {
@@ -86,16 +101,22 @@ const styles = StyleSheet.create({
   },
 
   greeting: {
-    fontSize: 18,
+    fontSize: 20,
+    fontWeight: "600",
     color: "#666",
+    marginBottom: 6,
   },
 
-  name: {
-    fontSize: 28,
-    fontWeight: "700",
+  welcome: {
+    fontSize: 18,
+    color: "#777",
+    marginBottom: 20,
+    flexWrap: "wrap",
+  },
+
+  userName: {
     color: PRIMARY,
-    marginTop: 8,
-    marginBottom: 25,
+    fontWeight: "700",
   },
 
   card: {
@@ -112,8 +133,8 @@ const styles = StyleSheet.create({
 
   cardText: {
     color: "#FFF",
-    marginTop: 10,
     fontSize: 16,
+    marginTop: 10,
   },
 
   cardButton: {
@@ -126,8 +147,8 @@ const styles = StyleSheet.create({
 
   cardButtonText: {
     color: PRIMARY,
-    fontWeight: "700",
     fontSize: 16,
+    fontWeight: "700",
   },
 
   sectionTitle: {
@@ -140,18 +161,24 @@ const styles = StyleSheet.create({
 
   grid: {
     flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-between",
+    justifyContent: "space-evenly",
   },
 
   box: {
-    width: "48%",
+    width: "45%",
     backgroundColor: "#FFF",
     borderRadius: 16,
     paddingVertical: 28,
-    marginBottom: 16,
     alignItems: "center",
     elevation: 3,
+
+    shadowColor: "#000",
+    shadowOpacity: 0.12,
+    shadowRadius: 5,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
   },
 
   icon: {
@@ -168,7 +195,8 @@ const styles = StyleSheet.create({
   footer: {
     textAlign: "center",
     color: "#888",
-    marginTop: 30,
+    marginTop: 40,
     marginBottom: 20,
+    fontSize: 14,
   },
 });

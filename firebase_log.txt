@@ -1,0 +1,49 @@
+08-02 16:25:58.574 30645 30645 E AndroidRuntime: FATAL EXCEPTION: main
+08-02 16:25:58.574 30645 30645 E AndroidRuntime: java.lang.RuntimeException: Unable to load script.
+08-03 09:51:10.197  1378  1427 I ActivityManager: Start proc 26040:com.transsion.phoenix:service/u0a128 for broadcast {com.transsion.phoenix/com.google.firebase.iid.FirebaseInstanceIdReceiver}
+08-03 09:51:11.697  1378  1499 D BroadcastQueue: Finished with ordered broadcast BroadcastRecord{ebb8c4b u0 com.google.android.c2dm.intent.RECEIVE} receivers:([ResolveInfo{6085c81 com.transsion.phoenix/com.google.firebase.iid.FirebaseInstanceIdReceiver m=0x108000}]) take 1560ms in [foreground], remains -1
+08-03 09:52:08.541  1378  3390 D PackageManager: Considering set com.google.android.permissioncontroller/com.android.permissioncontroller.role.ui.SpecialAppAccessListActivity's state as 2 with userId = 0, callingPackage = null
+08-03 09:52:08.647  1378  3390 W ActivityManager: Exception when unbinding service com.android.vending/com.google.frameworks.client.data.android.server.play.BackgroundProcessEndpointService
+08-03 09:52:08.647  1378  3390 W ActivityManager: android.os.DeadObjectException
+08-03 09:53:26.203  1378  2741 D BroadcastQueue: Finished with ordered broadcast BroadcastRecord{67169bb u0 com.google.android.c2dm.intent.RECEIVE} receivers:([ResolveInfo{8455533 com.whatsapp/com.google.firebase.iid.FirebaseInstanceIdReceiver m=0x108000}]) take 110ms in [foreground], remains -1
+08-03 09:54:05.623  1378  1512 D BiometricService: canAuthenticate: User=0, Caller=0, Authenticators=255
+08-03 09:54:05.623  1378  4473 D BiometricService: canAuthenticate: User=0, Caller=0, Authenticators=255
+08-03 09:54:05.624  1378  4473 D BiometricService/PreAuthInfo: Package: com.google.android.gms Sensor ID: 0 Modality: 2 Status: 1
+08-03 09:54:05.624  1378  4473 D BiometricService/PreAuthInfo: Package: com.google.android.gms Sensor ID: 4 Modality: 8 Status: 4
+08-03 09:54:05.624  1378  1512 D BiometricService/PreAuthInfo: Package: com.google.android.gms Sensor ID: 0 Modality: 2 Status: 1
+08-03 09:54:05.624  1378  1512 D BiometricService/PreAuthInfo: Package: com.google.android.gms Sensor ID: 4 Modality: 8 Status: 4
+08-03 09:54:05.624  1378  4473 D BiometricService/PreAuthInfo: getCanAuthenticateInternal Modality: 2 AuthenticatorStatus: 1
+08-03 09:54:05.624  1378  1512 D BiometricService/PreAuthInfo: getCanAuthenticateInternal Modality: 2 AuthenticatorStatus: 1
+08-03 09:54:05.624  1378  4473 D AuthService: canAuthenticate, userId: 0, callingUserId: 0, authenticators: 255, result: 0
+08-03 09:54:05.624  1378  1512 D AuthService: canAuthenticate, userId: 0, callingUserId: 0, authenticators: 255, result: 0
+08-03 09:54:08.214  1378  2229 D BiometricService: canAuthenticate: User=0, Caller=0, Authenticators=255
+08-03 09:54:08.215  1378  2229 D BiometricService/PreAuthInfo: Package: com.google.android.gms Sensor ID: 0 Modality: 2 Status: 1
+08-03 09:54:08.215  1378  2229 D BiometricService/PreAuthInfo: Package: com.google.android.gms Sensor ID: 4 Modality: 8 Status: 4
+08-03 09:54:08.215  1378  2229 D BiometricService/PreAuthInfo: getCanAuthenticateInternal Modality: 2 AuthenticatorStatus: 1
+08-03 09:54:08.215  1378  2229 D AuthService: canAuthenticate, userId: 0, callingUserId: 0, authenticators: 255, result: 0
+08-03 09:54:08.306  1378  4472 D BiometricService: canAuthenticate: User=0, Caller=0, Authenticators=255
+08-03 09:54:08.307  1378  4472 D BiometricService/PreAuthInfo: Package: com.google.android.gms Sensor ID: 0 Modality: 2 Status: 1
+08-03 09:54:08.307  1378  4472 D BiometricService/PreAuthInfo: Package: com.google.android.gms Sensor ID: 4 Modality: 8 Status: 4
+08-03 09:54:08.307  1378  4472 D BiometricService/PreAuthInfo: getCanAuthenticateInternal Modality: 2 AuthenticatorStatus: 1
+08-03 09:54:08.307  1378  4472 D AuthService: canAuthenticate, userId: 0, callingUserId: 0, authenticators: 255, result: 0
+08-03 09:54:08.311  1378  1427 I ActivityManager: Start proc 31390:com.whatsapp.w4b/u0a315 for broadcast {com.whatsapp.w4b/com.google.firebase.iid.FirebaseInstanceIdReceiver}
+08-03 09:54:08.643  1378  3405 D BiometricService: canAuthenticate: User=0, Caller=0, Authenticators=255
+08-03 09:54:08.643  1378  3405 D BiometricService/PreAuthInfo: Package: com.google.android.gms Sensor ID: 0 Modality: 2 Status: 1
+08-03 09:54:08.643  1378  3405 D BiometricService/PreAuthInfo: Package: com.google.android.gms Sensor ID: 4 Modality: 8 Status: 4
+08-03 09:54:08.643  1378  3405 D BiometricService/PreAuthInfo: getCanAuthenticateInternal Modality: 2 AuthenticatorStatus: 1
+08-03 09:54:08.643  1378  3405 D AuthService: canAuthenticate, userId: 0, callingUserId: 0, authenticators: 255, result: 0
+08-03 09:54:08.810  1378  3390 D BiometricService: canAuthenticate: User=0, Caller=0, Authenticators=255
+08-03 09:54:08.810  1378  3390 D BiometricService/PreAuthInfo: Package: com.google.android.gms Sensor ID: 0 Modality: 2 Status: 1
+08-03 09:54:08.810  1378  3390 D BiometricService/PreAuthInfo: Package: com.google.android.gms Sensor ID: 4 Modality: 8 Status: 4
+08-03 09:54:08.810  1378  3390 D BiometricService/PreAuthInfo: getCanAuthenticateInternal Modality: 2 AuthenticatorStatus: 1
+08-03 09:54:08.810  1378  3390 D AuthService: canAuthenticate, userId: 0, callingUserId: 0, authenticators: 255, result: 0
+08-03 09:54:08.980  1378  4470 D BiometricService: canAuthenticate: User=0, Caller=0, Authenticators=255
+08-03 09:54:08.980  1378  4470 D BiometricService/PreAuthInfo: Package: com.google.android.gms Sensor ID: 0 Modality: 2 Status: 1
+08-03 09:54:08.981  1378  4470 D BiometricService/PreAuthInfo: Package: com.google.android.gms Sensor ID: 4 Modality: 8 Status: 4
+08-03 09:54:08.981  1378  4470 D BiometricService/PreAuthInfo: getCanAuthenticateInternal Modality: 2 AuthenticatorStatus: 1
+08-03 09:54:08.981  1378  4470 D AuthService: canAuthenticate, userId: 0, callingUserId: 0, authenticators: 255, result: 0
+08-03 09:54:09.242  1378  4470 D BroadcastQueue: Finished with ordered broadcast BroadcastRecord{edb26ae u0 com.google.android.c2dm.intent.RECEIVE} receivers:([ResolveInfo{e814f34 com.whatsapp.w4b/com.google.firebase.iid.FirebaseInstanceIdReceiver m=0x108000}]) take 950ms in [foreground], remains -1
+08-03 09:54:09.639  1378  1500 D BroadcastQueue: Finished with ordered broadcast BroadcastRecord{8045ea9 u0 com.google.android.c2dm.intent.RECEIVE} receivers:([ResolveInfo{6e3ccde com.whatsapp.w4b/com.google.firebase.iid.FirebaseInstanceIdReceiver m=0x108000}]) take 85ms in [foreground], remains -1
+08-03 09:56:59.503  1378  1427 I ActivityManager: Start proc 32482:com.discord/u0a278 for broadcast {com.discord/com.google.firebase.iid.FirebaseInstanceIdReceiver}
+08-03 09:57:00.742  1378  1394 D BroadcastQueue: Finished with ordered broadcast BroadcastRecord{d98507 u0 com.google.android.c2dm.intent.RECEIVE} receivers:([ResolveInfo{af3611c com.discord/com.google.firebase.iid.FirebaseInstanceIdReceiver m=0x108000}]) take 1258ms in [foreground], remains -1
+08-03 09:58:03.574 29417 29569 E msgr.msys: E[N MQTT]onConnectError(561)=>Connect Error: fizz::FizzVerificationException: verifier failure: openssl cert verify error: unable to get local issuer certificate

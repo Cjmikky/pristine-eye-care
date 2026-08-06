@@ -72,6 +72,8 @@ export default function SignupScreen({ navigation }: Props) {
     try {
       setLoading(true);
 
+      console.log("========== STARTING SIGNUP ==========");
+
       const userCredential =
         await createUserWithEmailAndPassword(
           auth,
@@ -79,7 +81,15 @@ export default function SignupScreen({ navigation }: Props) {
           password
         );
 
+      console.log("========== SIGNUP SUCCESS ==========");
+      console.log(userCredential.user);
+      console.log("====================================");
+
       const user = userCredential.user;
+
+      console.log("STEP 1 - User created successfully");
+
+      console.log("STEP 2 - Writing user to Firestore");
 
       await setDoc(doc(db, "users", user.uid), {
         uid: user.uid,
@@ -89,35 +99,32 @@ export default function SignupScreen({ navigation }: Props) {
         createdAt: serverTimestamp(),
       });
 
+      console.log("STEP 3 - Firestore write completed");
+
       Alert.alert(
         "Success",
         "Account created successfully!"
       );
 
+      console.log("STEP 4 - Navigating to Dashboard");
+
       navigation.replace("Dashboard");
     } catch (error: any) {
-      let message = "Unable to create account.";
+      console.log("========== FIREBASE ERROR ==========");
+      console.log(error);
+      console.log("CODE:", error?.code);
+      console.log("MESSAGE:", error?.message);
+      console.log("STACK:", error?.stack);
+      console.log("====================================");
 
-      switch (error.code) {
-        case "auth/email-already-in-use":
-          message = "Email already exists.";
-          break;
-
-        case "auth/invalid-email":
-          message = "Invalid email address.";
-          break;
-
-        case "auth/weak-password":
-          message =
-            "Password should be at least 6 characters.";
-          break;
-
-        default:
-          message = error.message;
-      }
-
-      Alert.alert("Signup Failed", message);
+      Alert.alert(
+        "Signup Failed",
+        `Code: ${error?.code ?? "Unknown"}\n\nMessage: ${
+          error?.message ?? "Unknown error"
+        }`
+      );
     } finally {
+      console.log("STEP 5 - Finally block reached");
       setLoading(false);
     }
   };

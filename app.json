@@ -5,19 +5,15 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
-
     "icon": "./assets/images/logo.png",
-
     "splash": {
       "image": "./assets/images/logo.png",
       "resizeMode": "contain",
       "backgroundColor": "#FFFFFF"
     },
-
     "assetBundlePatterns": [
       "**/*"
     ],
-
     "android": {
       "package": "com.cjmikky.pristineeyecare",
       "adaptiveIcon": {
@@ -26,18 +22,20 @@
       },
       "edgeToEdgeEnabled": true
     },
-
     "ios": {
       "supportsTablet": true
     },
-
     "web": {
       "favicon": "./assets/images/logo.png"
     },
-
     "plugins": [
       "expo-font",
       "expo-splash-screen"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "86092ca8-ac0b-4783-8df9-1f13b315c7a4"
+      }
+    }
   }
 }

@@ -40,42 +40,47 @@ export default function LoginScreen({ navigation }: Props) {
     try {
       setLoading(true);
 
-      await signInWithEmailAndPassword(
+      console.log("====================================");
+      console.log("LOGIN ATTEMPT");
+      console.log("Email:", email.trim());
+      console.log("====================================");
+
+      const userCredential = await signInWithEmailAndPassword(
         auth,
         email.trim(),
         password
       );
 
+      console.log("====================================");
+      console.log("LOGIN SUCCESS");
+      console.log(userCredential.user);
+      console.log("====================================");
+
       Alert.alert("Success", "Login successful!");
 
       navigation.replace("Dashboard");
     } catch (error: any) {
-      let message = "Login failed.";
+      console.log("====================================");
+      console.log("FIREBASE LOGIN ERROR");
+      console.log(error);
+      console.log("Code:", error?.code);
+      console.log("Message:", error?.message);
+      console.log("Name:", error?.name);
+      console.log("Stack:", error?.stack);
+      console.log("====================================");
 
-      switch (error.code) {
-        case "auth/invalid-email":
-          message = "Invalid email address.";
-          break;
-
-        case "auth/user-not-found":
-          message = "No account found with this email.";
-          break;
-
-        case "auth/wrong-password":
-        case "auth/invalid-credential":
-          message = "Incorrect email or password.";
-          break;
-
-        case "auth/too-many-requests":
-          message =
-            "Too many attempts. Please try again later.";
-          break;
-
-        default:
-          message = error.message;
-      }
-
-      Alert.alert("Login Failed", message);
+      Alert.alert(
+        "Firebase Login Error",
+        JSON.stringify(
+          {
+            code: error?.code,
+            message: error?.message,
+            name: error?.name,
+          },
+          null,
+          2
+        )
+      );
     } finally {
       setLoading(false);
     }
@@ -118,9 +123,7 @@ export default function LoginScreen({ navigation }: Props) {
           />
 
           <Pressable
-            onPress={() =>
-              navigation.navigate("ForgotPassword")
-            }
+            onPress={() => navigation.navigate("ForgotPassword")}
           >
             <Text style={styles.forgot}>
               Forgot Password?
@@ -138,9 +141,7 @@ export default function LoginScreen({ navigation }: Props) {
             </Text>
 
             <Pressable
-              onPress={() =>
-                navigation.navigate("Signup")
-              }
+              onPress={() => navigation.navigate("Signup")}
             >
               <Text style={styles.link}>
                 Sign Up
