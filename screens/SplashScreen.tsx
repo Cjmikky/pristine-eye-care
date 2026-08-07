@@ -6,6 +6,7 @@ import {
   Animated,
   StatusBar,
 } from "react-native";
+
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation/AppNavigator";
 
@@ -22,6 +23,7 @@ export default function SplashScreen({ navigation }: Props) {
         duration: 1200,
         useNativeDriver: true,
       }),
+
       Animated.spring(scale, {
         toValue: 1,
         friction: 5,
@@ -30,14 +32,17 @@ export default function SplashScreen({ navigation }: Props) {
     ]).start();
 
     const timer = setTimeout(() => {
-      navigation.replace("Welcome");
+      navigation.replace("Login");
     }, 3000);
 
     return () => clearTimeout(timer);
-  }, []);
+
+  }, [navigation, fade, scale]);
+
 
   return (
     <View style={styles.container}>
+
       <StatusBar
         barStyle="dark-content"
         backgroundColor="#FFFFFF"
@@ -65,6 +70,7 @@ export default function SplashScreen({ navigation }: Props) {
         Pristine Eye Care
       </Animated.Text>
 
+
       <Animated.Text
         style={[
           styles.tagline,
@@ -75,11 +81,14 @@ export default function SplashScreen({ navigation }: Props) {
       >
         Center for Prime Sight and Style
       </Animated.Text>
+
     </View>
   );
 }
 
+
 const styles = StyleSheet.create({
+
   container: {
     flex: 1,
     backgroundColor: "#FFFFFF",
@@ -88,6 +97,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
 
+
   logo: {
     width: 140,
     height: 140,
@@ -95,11 +105,13 @@ const styles = StyleSheet.create({
     marginBottom: 28,
   },
 
+
   title: {
     fontSize: 30,
     fontWeight: "700",
     color: "#B3000F",
   },
+
 
   tagline: {
     marginTop: 10,
@@ -107,4 +119,5 @@ const styles = StyleSheet.create({
     color: "#666",
     textAlign: "center",
   },
+
 });

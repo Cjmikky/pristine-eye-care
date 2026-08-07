@@ -2,15 +2,14 @@ import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
 import SplashScreen from "../screens/SplashScreen";
-import WelcomeScreen from "../screens/WelcomeScreen";
 import LoginScreen from "../screens/LoginScreen";
 import SignupScreen from "../screens/SignupScreen";
 import ForgotPasswordScreen from "../screens/ForgotPasswordScreen";
-import DashboardScreen from "../screens/DashboardScreen";
+
+import BottomNavigator from "./BottomNavigator";
 
 export type RootStackParamList = {
   Splash: undefined;
-  Welcome: undefined;
   Login: undefined;
   Signup: undefined;
   ForgotPassword: undefined;
@@ -25,17 +24,11 @@ export default function AppNavigator() {
       initialRouteName="Splash"
       screenOptions={{
         headerShown: false,
-        animation: "slide_from_right",
       }}
     >
       <Stack.Screen
         name="Splash"
         component={SplashScreen}
-      />
-
-      <Stack.Screen
-        name="Welcome"
-        component={WelcomeScreen}
       />
 
       <Stack.Screen
@@ -55,8 +48,9 @@ export default function AppNavigator() {
 
       <Stack.Screen
         name="Dashboard"
-        component={DashboardScreen}
+        component={BottomNavigator}
       />
+
     </Stack.Navigator>
   );
 }
