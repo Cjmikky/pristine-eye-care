@@ -12,6 +12,7 @@ import {
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { signOut } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
+import Ionicons from "@expo/vector-icons/Ionicons";
 
 import { auth, db } from "../firebase/config";
 import { RootStackParamList } from "../navigation/AppNavigator";
@@ -23,11 +24,14 @@ type Props = NativeStackScreenProps<
 
 const PRIMARY = "#B3000F";
 
-export default function DashboardScreen({
+export default function HomeScreen({
   navigation,
 }: Props) {
-  const [userName, setUserName] = useState("Loading...");
-  const [loading, setLoading] = useState(true);
+  const [userName, setUserName] =
+    useState("Loading...");
+
+  const [loading, setLoading] =
+    useState(true);
 
   useEffect(() => {
     loadUser();
@@ -36,39 +40,68 @@ export default function DashboardScreen({
   const getGreeting = () => {
     const hour = new Date().getHours();
 
-    if (hour < 12) return "Good Morning 👋";
-    if (hour < 17) return "Good Afternoon ☀️";
-    if (hour < 20) return "Good Evening 🌇";
+    if (hour < 12) {
+      return "Good Morning 👋";
+    }
+
+    if (hour < 17) {
+      return "Good Afternoon ☀️";
+    }
+
+    if (hour < 20) {
+      return "Good Evening 🌇";
+    }
 
     return "Good Night 🌙";
   };
 
   const loadUser = async () => {
     try {
-      const currentUser = auth.currentUser;
+      const currentUser =
+        auth.currentUser;
 
       if (!currentUser) {
         setUserName("Guest");
         return;
       }
 
-      const docRef = doc(db, "users", currentUser.uid);
+      const docRef = doc(
+        db,
+        "users",
+        currentUser.uid
+      );
 
-      const docSnap = await getDoc(docRef);
+      const docSnap =
+        await getDoc(docRef);
 
       if (docSnap.exists()) {
-        const data = docSnap.data();
+        const data =
+          docSnap.data();
 
-        setUserName(data.fullName || "User");
+        setUserName(
+          data.fullName || "User"
+        );
       } else {
-        setUserName(currentUser.email || "User");
+        setUserName(
+          currentUser.email || "User"
+        );
       }
     } catch (error) {
-      console.log(error);
+      console.log(
+        "Load user error:",
+        error
+      );
+
       setUserName("User");
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleNotifications = () => {
+    navigation.navigate(
+      "Notifications" as never
+    );
   };
 
   const handleLogout = () => {
@@ -87,9 +120,14 @@ export default function DashboardScreen({
             try {
               await signOut(auth);
 
-              navigation.replace("Login");
+              navigation.replace(
+                "Login"
+              );
             } catch (error) {
-              console.log(error);
+              console.log(
+                "Logout error:",
+                error
+              );
 
               Alert.alert(
                 "Error",
@@ -103,26 +141,44 @@ export default function DashboardScreen({
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView
+      style={styles.container}
+    >
       <ScrollView
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
+        contentContainerStyle={
+          styles.content
+        }
+        showsVerticalScrollIndicator={
+          false
+        }
       >
+        {/* HEADER */}
+
         <View style={styles.header}>
-          <View>
-            <Text style={styles.greeting}>
+          <View
+            style={styles.headerInfo}
+          >
+            <Text
+              style={styles.greeting}
+            >
               {getGreeting()}
             </Text>
 
             {loading ? (
               <ActivityIndicator
                 color={PRIMARY}
-                style={{ marginTop: 10 }}
+                style={
+                  styles.loadingIndicator
+                }
               />
             ) : (
-              <Text style={styles.welcome}>
+              <Text
+                style={styles.welcome}
+              >
                 Welcome back,
-                <Text style={styles.userName}>
+                <Text
+                  style={styles.userName}
+                >
                   {" "}
                   {userName}
                 </Text>
@@ -130,55 +186,140 @@ export default function DashboardScreen({
             )}
           </View>
 
-          <Pressable
-            style={styles.logoutButton}
-            onPress={handleLogout}
+          {/* HEADER ACTIONS */}
+
+          <View
+            style={styles.headerActions}
           >
-            <Text style={styles.logoutText}>
-              Logout
-            </Text>
-          </Pressable>
+            {/* NOTIFICATION */}
+
+            <Pressable
+              style={
+                styles.notificationButton
+              }
+              onPress={
+                handleNotifications
+              }
+            >
+              <Ionicons
+                name="notifications-outline"
+                size={25}
+                color={PRIMARY}
+              />
+
+              <View
+                style={
+                  styles.notificationBadge
+                }
+              >
+                <Text
+                  style={
+                    styles.notificationBadgeText
+                  }
+                >
+                  !
+                </Text>
+              </View>
+            </Pressable>
+
+            {/* LOGOUT */}
+
+            <Pressable
+              style={
+                styles.logoutButton
+              }
+              onPress={handleLogout}
+            >
+              <Ionicons
+                name="log-out-outline"
+                size={16}
+                color="#FFFFFF"
+              />
+
+              <Text
+                style={styles.logoutText}
+              >
+                Logout
+              </Text>
+            </Pressable>
+          </View>
         </View>
 
+        {/* NEXT APPOINTMENT */}
+
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>
+          <Text
+            style={styles.cardTitle}
+          >
             Next Appointment
           </Text>
 
-          <Text style={styles.cardText}>
+          <Text
+            style={styles.cardText}
+          >
             No upcoming appointment.
           </Text>
 
-          <Pressable style={styles.cardButton}>
-            <Text style={styles.cardButtonText}>
+          <Pressable
+            style={styles.cardButton}
+          >
+            <Text
+              style={
+                styles.cardButtonText
+              }
+            >
               Book Appointment
             </Text>
           </Pressable>
         </View>
 
-        <Text style={styles.sectionTitle}>
+        {/* QUICK ACTIONS */}
+
+        <Text
+          style={styles.sectionTitle}
+        >
           Quick Actions
         </Text>
 
         <View style={styles.grid}>
-          <Pressable style={styles.box}>
-            <Text style={styles.icon}>👓</Text>
+          <Pressable
+            style={styles.box}
+          >
+            <Text
+              style={styles.icon}
+            >
+              👓
+            </Text>
 
-            <Text style={styles.boxText}>
+            <Text
+              style={styles.boxText}
+            >
               Eye Test
             </Text>
           </Pressable>
 
-          <Pressable style={styles.box}>
-            <Text style={styles.icon}>📅</Text>
+          <Pressable
+            style={styles.box}
+          >
+            <Text
+              style={styles.icon}
+            >
+              📅
+            </Text>
 
-            <Text style={styles.boxText}>
+            <Text
+              style={styles.boxText}
+            >
               Appointments
             </Text>
           </Pressable>
         </View>
 
-        <Text style={styles.footer}>
+        {/* VERSION */}
+
+        <Text
+          style={styles.footer}
+        >
           Version 1.0.0
         </Text>
       </ScrollView>
@@ -193,26 +334,35 @@ const styles = StyleSheet.create({
   },
 
   content: {
-    padding: 20,
+    paddingHorizontal: 20,
+    paddingTop: 32,
+    paddingBottom: 30,
   },
 
   header: {
+    width: "100%",
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "flex-start",
-    marginBottom: 20,
+    justifyContent: "space-between",
+    marginBottom: 24,
+  },
+
+  headerInfo: {
+    flex: 1,
+    paddingRight: 6,
   },
 
   greeting: {
     fontSize: 20,
     fontWeight: "600",
-    color: "#666",
+    color: "#666666",
     marginBottom: 6,
   },
 
   welcome: {
     fontSize: 18,
-    color: "#777",
+    color: "#777777",
+    lineHeight: 24,
   },
 
   userName: {
@@ -220,17 +370,65 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
 
-  logoutButton: {
+  loadingIndicator: {
+    alignSelf: "flex-start",
+    marginTop: 8,
+  },
+
+  headerActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 7,
+    marginTop: 0,
+  },
+
+  notificationButton: {
+    width: 42,
+    height: 42,
+    borderRadius: 11,
+    backgroundColor: "#FFF0F1",
+    alignItems: "center",
+    justifyContent: "center",
+    position: "relative",
+  },
+
+  notificationBadge: {
+    position: "absolute",
+    top: 2,
+    right: 2,
+    width: 14,
+    height: 14,
+    borderRadius: 7,
     backgroundColor: PRIMARY,
-    paddingHorizontal: 18,
-    paddingVertical: 10,
-    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  notificationBadgeText: {
+    color: "#FFFFFF",
+    fontSize: 8,
+    fontWeight: "800",
+  },
+
+  /*
+   * Smaller logout button
+   */
+
+  logoutButton: {
+    height: 40,
+    paddingHorizontal: 10,
+    borderRadius: 9,
+    backgroundColor: PRIMARY,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 4,
   },
 
   logoutText: {
-    color: "#FFF",
+    color: "#FFFFFF",
     fontWeight: "700",
-    fontSize: 15,
+    fontSize: 11,
   },
 
   card: {
@@ -240,20 +438,20 @@ const styles = StyleSheet.create({
   },
 
   cardTitle: {
-    color: "#FFF",
+    color: "#FFFFFF",
     fontSize: 20,
     fontWeight: "700",
   },
 
   cardText: {
-    color: "#FFF",
+    color: "#FFFFFF",
     fontSize: 16,
     marginTop: 10,
   },
 
   cardButton: {
     marginTop: 20,
-    backgroundColor: "#FFF",
+    backgroundColor: "#FFFFFF",
     paddingVertical: 12,
     borderRadius: 12,
     alignItems: "center",
@@ -270,22 +468,22 @@ const styles = StyleSheet.create({
     marginBottom: 18,
     fontSize: 22,
     fontWeight: "700",
-    color: "#222",
+    color: "#222222",
   },
 
   grid: {
     flexDirection: "row",
-    justifyContent: "space-evenly",
+    justifyContent: "space-between",
   },
 
   box: {
-    width: "45%",
-    backgroundColor: "#FFF",
+    width: "47%",
+    backgroundColor: "#FFFFFF",
     borderRadius: 16,
     paddingVertical: 28,
     alignItems: "center",
     elevation: 3,
-    shadowColor: "#000",
+    shadowColor: "#000000",
     shadowOpacity: 0.12,
     shadowRadius: 5,
     shadowOffset: {
@@ -302,12 +500,12 @@ const styles = StyleSheet.create({
     marginTop: 12,
     fontSize: 16,
     fontWeight: "600",
-    color: "#333",
+    color: "#333333",
   },
 
   footer: {
     textAlign: "center",
-    color: "#888",
+    color: "#888888",
     marginTop: 40,
     marginBottom: 20,
     fontSize: 14,

@@ -5,6 +5,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import HomeScreen from "../screens/HomeScreen";
 import AppointmentScreen from "../screens/AppointmentScreen";
 import EyeTestScreen from "../screens/EyeTestScreen";
+import GalleryScreen from "../screens/GalleryScreen";
 import ProfileScreen from "../screens/ProfileScreen";
 
 const Tab = createBottomTabNavigator();
@@ -19,17 +20,40 @@ export default function BottomNavigator() {
         headerShown: false,
 
         tabBarActiveTintColor: PRIMARY,
-        tabBarInactiveTintColor: "#888",
+        tabBarInactiveTintColor: "#888888",
 
+        /*
+         * Make the bottom navigation occupy
+         * the entire available width.
+         */
         tabBarStyle: {
           height: 65,
+          paddingTop: 6,
           paddingBottom: 8,
-          paddingTop: 8,
+          backgroundColor: "#FFFFFF",
+          borderTopWidth: 1,
+          borderTopColor: "#EEEEEE",
+          elevation: 8,
+        },
+
+        /*
+         * Each tab gets equal space.
+         *
+         * 5 tabs = 20% each.
+         */
+        tabBarItemStyle: {
+          flex: 1,
+          width: "20%",
         },
 
         tabBarLabelStyle: {
-          fontSize: 12,
+          fontSize: 11,
           fontWeight: "600",
+          marginTop: 1,
+        },
+
+        tabBarIconStyle: {
+          marginBottom: -2,
         },
 
         tabBarIcon: ({ color, size }) => {
@@ -50,6 +74,10 @@ export default function BottomNavigator() {
               iconName = "eye";
               break;
 
+            case "Gallery":
+              iconName = "images";
+              break;
+
             case "Profile":
               iconName = "person";
               break;
@@ -68,21 +96,31 @@ export default function BottomNavigator() {
         },
       })}
     >
+      {/* HOME */}
       <Tab.Screen
         name="Home"
         component={HomeScreen}
       />
 
+      {/* APPOINTMENTS */}
       <Tab.Screen
         name="Appointments"
         component={AppointmentScreen}
       />
 
+      {/* EYE TEST */}
       <Tab.Screen
         name="Eye Test"
         component={EyeTestScreen}
       />
 
+      {/* GALLERY */}
+      <Tab.Screen
+        name="Gallery"
+        component={GalleryScreen}
+      />
+
+      {/* PROFILE */}
       <Tab.Screen
         name="Profile"
         component={ProfileScreen}
