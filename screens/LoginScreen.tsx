@@ -19,21 +19,38 @@ import PrimaryButton from "../components/PrimaryButton";
 import { RootStackParamList } from "../navigation/AppNavigator";
 import { auth } from "../firebase/config";
 
-type Props = NativeStackScreenProps<RootStackParamList, "Login">;
+type Props = NativeStackScreenProps<
+  RootStackParamList,
+  "Login"
+>;
 
-export default function LoginScreen({ navigation }: Props) {
+const PRIMARY = "#B3000F";
+
+export default function LoginScreen({
+  navigation,
+}: Props) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
     if (!email.trim()) {
-      Alert.alert("Validation", "Please enter your email.");
+      Alert.alert(
+        "Validation",
+        "Please enter your email."
+      );
       return;
     }
 
     if (!password.trim()) {
-      Alert.alert("Validation", "Please enter your password.");
+      Alert.alert(
+        "Validation",
+        "Please enter your password."
+      );
+      return;
+    }
+
+    if (loading) {
       return;
     }
 
@@ -45,18 +62,22 @@ export default function LoginScreen({ navigation }: Props) {
       console.log("Email:", email.trim());
       console.log("====================================");
 
-      const userCredential = await signInWithEmailAndPassword(
-        auth,
-        email.trim(),
-        password
-      );
+      const userCredential =
+        await signInWithEmailAndPassword(
+          auth,
+          email.trim(),
+          password
+        );
 
       console.log("====================================");
       console.log("LOGIN SUCCESS");
       console.log(userCredential.user);
       console.log("====================================");
 
-      Alert.alert("Success", "Login successful!");
+      Alert.alert(
+        "Success",
+        "Login successful!"
+      );
 
       navigation.replace("Dashboard");
     } catch (error: any) {
@@ -89,14 +110,25 @@ export default function LoginScreen({ navigation }: Props) {
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        style={styles.keyboardContainer}
+        behavior={
+          Platform.OS === "ios"
+            ? "padding"
+            : undefined
+        }
       >
         <ScrollView
           contentContainerStyle={styles.content}
+          keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <Logo />
+          {/* LOGO */}
+
+          <View style={styles.logoContainer}>
+            <Logo />
+          </View>
+
+          {/* TITLE */}
 
           <Text style={styles.title}>
             Welcome Back
@@ -105,6 +137,8 @@ export default function LoginScreen({ navigation }: Props) {
           <Text style={styles.subtitle}>
             Sign in to continue to Pristine Eye Care.
           </Text>
+
+          {/* EMAIL */}
 
           <InputField
             placeholder="Email Address"
@@ -115,6 +149,8 @@ export default function LoginScreen({ navigation }: Props) {
             onChangeText={setEmail}
           />
 
+          {/* PASSWORD */}
+
           <InputField
             placeholder="Password"
             secureTextEntry
@@ -122,18 +158,40 @@ export default function LoginScreen({ navigation }: Props) {
             onChangeText={setPassword}
           />
 
+          {/* FORGOT PASSWORD */}
+
           <Pressable
-            onPress={() => navigation.navigate("ForgotPassword")}
+            onPress={() =>
+              navigation.navigate(
+                "ForgotPassword"
+              )
+            }
+            disabled={loading}
           >
-            <Text style={styles.forgot}>
+            <Text
+              style={[
+                styles.forgot,
+                loading &&
+                  styles.disabledText,
+              ]}
+            >
               Forgot Password?
             </Text>
           </Pressable>
 
+          {/* SIGN IN */}
+
           <PrimaryButton
-            title={loading ? "Signing In..." : "Sign In"}
+            title={
+              loading
+                ? "Signing In..."
+                : "Sign In"
+            }
             onPress={handleLogin}
+            disabled={loading}
           />
+
+          {/* FOOTER */}
 
           <View style={styles.footer}>
             <Text style={styles.footerText}>
@@ -141,9 +199,18 @@ export default function LoginScreen({ navigation }: Props) {
             </Text>
 
             <Pressable
-              onPress={() => navigation.navigate("Signup")}
+              onPress={() =>
+                navigation.navigate("Signup")
+              }
+              disabled={loading}
             >
-              <Text style={styles.link}>
+              <Text
+                style={[
+                  styles.link,
+                  loading &&
+                    styles.disabledText,
+                ]}
+              >
                 Sign Up
               </Text>
             </Pressable>
@@ -160,6 +227,10 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
   },
 
+  keyboardContainer: {
+    flex: 1,
+  },
+
   content: {
     flexGrow: 1,
     justifyContent: "center",
@@ -167,17 +238,22 @@ const styles = StyleSheet.create({
     paddingVertical: 30,
   },
 
+  logoContainer: {
+    alignItems: "center",
+    marginBottom: 8,
+  },
+
   title: {
     fontSize: 30,
     fontWeight: "700",
-    color: "#B3000F",
+    color: PRIMARY,
     textAlign: "center",
     marginTop: 10,
   },
 
   subtitle: {
     fontSize: 16,
-    color: "#666",
+    color: "#666666",
     textAlign: "center",
     marginTop: 10,
     marginBottom: 20,
@@ -186,9 +262,13 @@ const styles = StyleSheet.create({
 
   forgot: {
     marginTop: 15,
-    color: "#B3000F",
+    color: PRIMARY,
     textAlign: "right",
     fontWeight: "600",
+  },
+
+  disabledText: {
+    opacity: 0.5,
   },
 
   footer: {
@@ -199,13 +279,13 @@ const styles = StyleSheet.create({
   },
 
   footerText: {
-    color: "#666",
+    color: "#666666",
     fontSize: 15,
   },
 
   link: {
     marginLeft: 6,
-    color: "#B3000F",
+    color: PRIMARY,
     fontWeight: "700",
     fontSize: 15,
   },

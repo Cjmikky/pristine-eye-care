@@ -104,6 +104,12 @@ export default function HomeScreen({
     );
   };
 
+  const handleBookAppointment = () => {
+    navigation.navigate(
+      "Appointments" as never
+    );
+  };
+
   const handleLogout = () => {
     Alert.alert(
       "Logout",
@@ -191,7 +197,7 @@ export default function HomeScreen({
           <View
             style={styles.headerActions}
           >
-            {/* NOTIFICATION */}
+            {/* NOTIFICATIONS */}
 
             <Pressable
               style={
@@ -262,6 +268,9 @@ export default function HomeScreen({
 
           <Pressable
             style={styles.cardButton}
+            onPress={
+              handleBookAppointment
+            }
           >
             <Text
               style={
@@ -282,14 +291,21 @@ export default function HomeScreen({
         </Text>
 
         <View style={styles.grid}>
+          {/* EYE TEST */}
+
           <Pressable
             style={styles.box}
+            onPress={() =>
+              navigation.navigate(
+                "Eye Test" as never
+              )
+            }
           >
-            <Text
-              style={styles.icon}
-            >
-              👓
-            </Text>
+            <Ionicons
+              name="eye-outline"
+              size={34}
+              color={PRIMARY}
+            />
 
             <Text
               style={styles.boxText}
@@ -298,14 +314,19 @@ export default function HomeScreen({
             </Text>
           </Pressable>
 
+          {/* APPOINTMENTS */}
+
           <Pressable
             style={styles.box}
+            onPress={
+              handleBookAppointment
+            }
           >
-            <Text
-              style={styles.icon}
-            >
-              📅
-            </Text>
+            <Ionicons
+              name="calendar-outline"
+              size={34}
+              color={PRIMARY}
+            />
 
             <Text
               style={styles.boxText}
@@ -410,10 +431,6 @@ const styles = StyleSheet.create({
     fontWeight: "800",
   },
 
-  /*
-   * Smaller logout button
-   */
-
   logoutButton: {
     height: 40,
     paddingHorizontal: 10,
@@ -490,10 +507,6 @@ const styles = StyleSheet.create({
       width: 0,
       height: 2,
     },
-  },
-
-  icon: {
-    fontSize: 34,
   },
 
   boxText: {
