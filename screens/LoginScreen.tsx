@@ -9,13 +9,13 @@ import {
   Platform,
   ScrollView,
   Alert,
+  ActivityIndicator,
 } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { signInWithEmailAndPassword } from "firebase/auth";
 
 import Logo from "../components/Logo";
 import InputField from "../components/InputField";
-import PrimaryButton from "../components/PrimaryButton";
 import { RootStackParamList } from "../navigation/AppNavigator";
 import { auth } from "../firebase/config";
 
@@ -34,6 +34,10 @@ export default function LoginScreen({
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
+    if (loading) {
+      return;
+    }
+
     if (!email.trim()) {
       Alert.alert(
         "Validation",
@@ -50,57 +54,71 @@ export default function LoginScreen({
       return;
     }
 
-    if (loading) {
-      return;
-    }
-
     try {
       setLoading(true);
 
       console.log("====================================");
       console.log("LOGIN ATTEMPT");
-      console.log("Email:", email.trim());
       console.log("====================================");
 
-      const userCredential =
-        await signInWithEmailAndPassword(
-          auth,
-          email.trim(),
-          password
-        );
-
-      console.log("====================================");
-      console.log("LOGIN SUCCESS");
-      console.log(userCredential.user);
-      console.log("====================================");
-
-      Alert.alert(
-        "Success",
-        "Login successful!"
+      await signInWithEmailAndPassword(
+        auth,
+        email.trim(),
+        password
       );
 
+      console.log("LOGIN SUCCESS");
+
+      /*
+       * Navigate immediately after successful authentication.
+       * No OK button or manual confirmation is required.
+       */
       navigation.replace("Dashboard");
     } catch (error: any) {
       console.log("====================================");
       console.log("FIREBASE LOGIN ERROR");
-      console.log(error);
       console.log("Code:", error?.code);
-      console.log("Message:", error?.message);
-      console.log("Name:", error?.name);
-      console.log("Stack:", error?.stack);
       console.log("====================================");
 
+      let message =
+        "Unable to sign in. Please check your email and password.";
+
+      switch (error?.code) {
+        case "auth/invalid-credential":
+        case "auth/wrong-password":
+        case "auth/user-not-found":
+          message =
+            "Incorrect email or password. Please try again.";
+          break;
+
+        case "auth/invalid-email":
+          message =
+            "Please enter a valid email address.";
+          break;
+
+        case "auth/network-request-failed":
+          message =
+            "Unable to connect to the server. Please check your internet connection and try again.";
+          break;
+
+        case "auth/too-many-requests":
+          message =
+            "Too many unsuccessful attempts. Please wait a while and try again.";
+          break;
+
+        case "auth/user-disabled":
+          message =
+            "This account has been disabled. Please contact support.";
+          break;
+
+        default:
+          message =
+            "Something went wrong while signing in. Please try again.";
+      }
+
       Alert.alert(
-        "Firebase Login Error",
-        JSON.stringify(
-          {
-            code: error?.code,
-            message: error?.message,
-            name: error?.name,
-          },
-          null,
-          2
-        )
+        "Login Failed",
+        message
       );
     } finally {
       setLoading(false);
@@ -147,6 +165,7 @@ export default function LoginScreen({
             autoCorrect={false}
             value={email}
             onChangeText={setEmail}
+            editable={!loading}
           />
 
           {/* PASSWORD */}
@@ -156,6 +175,7 @@ export default function LoginScreen({
             secureTextEntry
             value={password}
             onChangeText={setPassword}
+            editable={!loading}
           />
 
           {/* FORGOT PASSWORD */}
@@ -181,15 +201,28 @@ export default function LoginScreen({
 
           {/* SIGN IN */}
 
-          <PrimaryButton
-            title={
-              loading
-                ? "Signing In..."
-                : "Sign In"
-            }
+          <Pressable
             onPress={handleLogin}
             disabled={loading}
-          />
+            style={[
+              styles.loginButton,
+              loading &&
+                styles.loginButtonDisabled,
+            ]}
+          >
+            {loading ? (
+              <ActivityIndicator
+                size="small"
+                color="#FFFFFF"
+              />
+            ) : (
+              <Text
+                style={styles.loginButtonText}
+              >
+                Sign In
+              </Text>
+            )}
+          </Pressable>
 
           {/* FOOTER */}
 
@@ -269,6 +302,25 @@ const styles = StyleSheet.create({
 
   disabledText: {
     opacity: 0.5,
+  },
+
+  loginButton: {
+    marginTop: 22,
+    height: 52,
+    borderRadius: 12,
+    backgroundColor: PRIMARY,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  loginButtonDisabled: {
+    opacity: 0.75,
+  },
+
+  loginButtonText: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "700",
   },
 
   footer: {

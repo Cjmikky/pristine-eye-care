@@ -5,16 +5,15 @@ import {
   Text,
   StyleSheet,
 } from "react-native";
-import { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
 import Logo from "../components/Logo";
 import PrimaryButton from "../components/PrimaryButton";
 import { RootStackParamList } from "../navigation/AppNavigator";
 
-type Props = NativeStackScreenProps<
-  RootStackParamList,
-  "Welcome"
->;
+type Props = {
+  navigation: NativeStackNavigationProp<RootStackParamList>;
+};
 
 export default function WelcomeScreen({
   navigation,
@@ -61,7 +60,7 @@ const styles = StyleSheet.create({
 
   title: {
     fontSize: 24,
-    color: "#555",
+    color: "#555555",
     marginTop: 20,
   },
 
@@ -75,7 +74,7 @@ const styles = StyleSheet.create({
 
   subtitle: {
     fontSize: 17,
-    color: "#666",
+    color: "#666666",
     textAlign: "center",
     marginTop: 10,
     marginBottom: 50,

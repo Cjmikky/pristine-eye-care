@@ -7,9 +7,15 @@ import {
 } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 
+import { useTheme } from "../context/ThemeContext";
+
 const PRIMARY = "#B3000F";
 
 export default function GalleryScreen() {
+  const { colors } = useTheme();
+
+  const styles = createStyles(colors);
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
@@ -48,63 +54,64 @@ export default function GalleryScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#F8F8F8",
-  },
+const createStyles = (colors: any) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
 
-  content: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 35,
-  },
+    content: {
+      flex: 1,
+      alignItems: "center",
+      justifyContent: "center",
+      paddingHorizontal: 35,
+    },
 
-  iconContainer: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: "#FFF0F1",
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 20,
-  },
+    iconContainer: {
+      width: 100,
+      height: 100,
+      borderRadius: 50,
+      backgroundColor: colors.primaryLight,
+      alignItems: "center",
+      justifyContent: "center",
+      marginBottom: 20,
+    },
 
-  title: {
-    fontSize: 28,
-    fontWeight: "800",
-    color: "#222222",
-    marginBottom: 14,
-  },
+    title: {
+      fontSize: 28,
+      fontWeight: "800",
+      color: colors.text,
+      marginBottom: 14,
+    },
 
-  badge: {
-    backgroundColor: PRIMARY,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    marginBottom: 20,
-  },
+    badge: {
+      backgroundColor: PRIMARY,
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+      borderRadius: 20,
+      marginBottom: 20,
+    },
 
-  badgeText: {
-    color: "#FFFFFF",
-    fontSize: 12,
-    fontWeight: "800",
-    letterSpacing: 0.5,
-  },
+    badgeText: {
+      color: "#FFFFFF",
+      fontSize: 12,
+      fontWeight: "800",
+      letterSpacing: 0.5,
+    },
 
-  message: {
-    fontSize: 17,
-    fontWeight: "700",
-    color: "#444444",
-    textAlign: "center",
-    marginBottom: 10,
-  },
+    message: {
+      fontSize: 17,
+      fontWeight: "700",
+      color: colors.text,
+      textAlign: "center",
+      marginBottom: 10,
+    },
 
-  description: {
-    fontSize: 14,
-    lineHeight: 21,
-    color: "#888888",
-    textAlign: "center",
-  },
-});
+    description: {
+      fontSize: 14,
+      lineHeight: 21,
+      color: colors.secondaryText,
+      textAlign: "center",
+    },
+  });

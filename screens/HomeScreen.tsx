@@ -1,4 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, {
+  useEffect,
+  useState,
+} from "react";
+
 import {
   SafeAreaView,
   View,
@@ -9,36 +13,101 @@ import {
   ActivityIndicator,
   Alert,
 } from "react-native";
-import { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { signOut } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
+
+import {
+  BottomTabScreenProps,
+} from "@react-navigation/bottom-tabs";
+
+import {
+  signOut,
+} from "firebase/auth";
+
+import {
+  doc,
+  getDoc,
+} from "firebase/firestore";
+
 import Ionicons from "@expo/vector-icons/Ionicons";
 
-import { auth, db } from "../firebase/config";
-import { RootStackParamList } from "../navigation/AppNavigator";
+import {
+  auth,
+  db,
+} from "../firebase/config";
 
-type Props = NativeStackScreenProps<
-  RootStackParamList,
-  "Dashboard"
->;
+import {
+  BottomTabParamList,
+} from "../navigation/BottomNavigator";
+
+import {
+  useTheme,
+} from "../context/ThemeContext";
+
+type Props =
+  BottomTabScreenProps<
+    BottomTabParamList,
+    "Home"
+  >;
 
 const PRIMARY = "#B3000F";
 
 export default function HomeScreen({
   navigation,
 }: Props) {
-  const [userName, setUserName] =
-    useState("Loading...");
+  const {
+    isDark,
+  } = useTheme();
 
-  const [loading, setLoading] =
-    useState(true);
+  const colors = {
+    background: isDark
+      ? "#121212"
+      : "#F8F8F8",
+
+    card: isDark
+      ? "#1E1E1E"
+      : "#FFFFFF",
+
+    text: isDark
+      ? "#FFFFFF"
+      : "#222222",
+
+    secondaryText: isDark
+      ? "#BBBBBB"
+      : "#666666",
+
+    mutedText: isDark
+      ? "#999999"
+      : "#777777",
+
+    border: isDark
+      ? "#333333"
+      : "#EEEEEE",
+
+    primaryLight: isDark
+      ? "#351519"
+      : "#FFF0F1",
+
+    softBackground: isDark
+      ? "#181818"
+      : "#FAFAFA",
+  };
+
+  const [
+    userName,
+    setUserName,
+  ] = useState("Loading...");
+
+  const [
+    loading,
+    setLoading,
+  ] = useState(true);
 
   useEffect(() => {
     loadUser();
   }, []);
 
   const getGreeting = () => {
-    const hour = new Date().getHours();
+    const hour =
+      new Date().getHours();
 
     if (hour < 12) {
       return "Good Morning 👋";
@@ -57,6 +126,8 @@ export default function HomeScreen({
 
   const loadUser = async () => {
     try {
+      setLoading(true);
+
       const currentUser =
         auth.currentUser;
 
@@ -98,15 +169,59 @@ export default function HomeScreen({
     }
   };
 
+  /*
+   * ==========================================
+   * NOTIFICATIONS
+   * ==========================================
+   *
+   * Notifications is a root-stack screen,
+   * not a bottom-tab screen.
+   */
   const handleNotifications = () => {
-    navigation.navigate(
+    const parent =
+      navigation.getParent();
+
+    parent?.navigate(
       "Notifications" as never
     );
   };
 
   const handleBookAppointment = () => {
     navigation.navigate(
-      "Appointments" as never
+      "Appointments"
+    );
+  };
+
+  const handleEyeTest = () => {
+    navigation.navigate(
+      "Eye Test"
+    );
+  };
+
+  const handleCustomerCare = () => {
+    const parent =
+      navigation.getParent();
+
+    parent?.navigate(
+      "Customer Care" as never
+    );
+  };
+
+  const handleUpcomingEvent = () => {
+    const parent =
+      navigation.getParent();
+
+    parent?.navigate(
+      "UpcomingEvent" as never
+    );
+  };
+
+  const handleChat = () => {
+    const parent =
+      navigation.getParent();
+
+    parent?.navigate(
+      "Chat" as never
     );
   };
 
@@ -122,12 +237,16 @@ export default function HomeScreen({
         {
           text: "Logout",
           style: "destructive",
+
           onPress: async () => {
             try {
               await signOut(auth);
 
-              navigation.replace(
-                "Login"
+              const parent =
+                navigation.getParent();
+
+              parent?.navigate(
+                "Login" as never
               );
             } catch (error) {
               console.log(
@@ -148,8 +267,18 @@ export default function HomeScreen({
 
   return (
     <SafeAreaView
-      style={styles.container}
+      style={[
+        styles.container,
+        {
+          backgroundColor:
+            colors.background,
+        },
+      ]}
     >
+      {/* ==========================================
+          SCROLLABLE CONTENT
+          ========================================== */}
+
       <ScrollView
         contentContainerStyle={
           styles.content
@@ -165,7 +294,13 @@ export default function HomeScreen({
             style={styles.headerInfo}
           >
             <Text
-              style={styles.greeting}
+              style={[
+                styles.greeting,
+                {
+                  color:
+                    colors.secondaryText,
+                },
+              ]}
             >
               {getGreeting()}
             </Text>
@@ -179,11 +314,23 @@ export default function HomeScreen({
               />
             ) : (
               <Text
-                style={styles.welcome}
+                style={[
+                  styles.welcome,
+                  {
+                    color:
+                      colors.secondaryText,
+                  },
+                ]}
               >
                 Welcome back,
                 <Text
-                  style={styles.userName}
+                  style={[
+                    styles.userName,
+                    {
+                      color:
+                        PRIMARY,
+                    },
+                  ]}
                 >
                   {" "}
                   {userName}
@@ -192,17 +339,19 @@ export default function HomeScreen({
             )}
           </View>
 
-          {/* HEADER ACTIONS */}
-
           <View
             style={styles.headerActions}
           >
-            {/* NOTIFICATIONS */}
+            {/* NOTIFICATION BUTTON */}
 
             <Pressable
-              style={
-                styles.notificationButton
-              }
+              style={[
+                styles.notificationButton,
+                {
+                  backgroundColor:
+                    colors.primaryLight,
+                },
+              ]}
               onPress={
                 handleNotifications
               }
@@ -228,7 +377,7 @@ export default function HomeScreen({
               </View>
             </Pressable>
 
-            {/* LOGOUT */}
+            {/* LOGOUT BUTTON */}
 
             <Pressable
               style={
@@ -253,18 +402,46 @@ export default function HomeScreen({
 
         {/* NEXT APPOINTMENT */}
 
-        <View style={styles.card}>
-          <Text
-            style={styles.cardTitle}
+        <View
+          style={[
+            styles.card,
+            {
+              backgroundColor:
+                PRIMARY,
+            },
+          ]}
+        >
+          <View
+            style={
+              styles.appointmentHeader
+            }
           >
-            Next Appointment
-          </Text>
+            <View>
+              <Text
+                style={styles.cardTitle}
+              >
+                Next Appointment
+              </Text>
 
-          <Text
-            style={styles.cardText}
-          >
-            No upcoming appointment.
-          </Text>
+              <Text
+                style={styles.cardText}
+              >
+                No upcoming appointment.
+              </Text>
+            </View>
+
+            <View
+              style={
+                styles.appointmentIcon
+              }
+            >
+              <Ionicons
+                name="calendar-outline"
+                size={28}
+                color="#FFFFFF"
+              />
+            </View>
+          </View>
 
           <Pressable
             style={styles.cardButton}
@@ -282,24 +459,167 @@ export default function HomeScreen({
           </Pressable>
         </View>
 
+        {/* UPCOMING EVENT */}
+
+        <Text
+          style={[
+            styles.sectionTitle,
+            {
+              color:
+                colors.text,
+            },
+          ]}
+        >
+          Upcoming Event
+        </Text>
+
+        <Pressable
+          style={[
+            styles.eventCard,
+            {
+              backgroundColor:
+                colors.card,
+              borderColor:
+                colors.border,
+            },
+          ]}
+          onPress={
+            handleUpcomingEvent
+          }
+        >
+          <View
+            style={[
+              styles.eventDate,
+              {
+                backgroundColor:
+                  colors.primaryLight,
+              },
+            ]}
+          >
+            <Text
+              style={[
+                styles.eventMonth,
+                {
+                  color:
+                    PRIMARY,
+                },
+              ]}
+            >
+              AUG
+            </Text>
+
+            <Text
+              style={[
+                styles.eventDay,
+                {
+                  color:
+                    PRIMARY,
+                },
+              ]}
+            >
+              24
+            </Text>
+          </View>
+
+          <View
+            style={styles.eventInfo}
+          >
+            <Text
+              style={[
+                styles.eventTitle,
+                {
+                  color:
+                    colors.text,
+                },
+              ]}
+            >
+              Free Eye Screening
+            </Text>
+
+            <View
+              style={styles.eventMeta}
+            >
+              <Ionicons
+                name="time-outline"
+                size={15}
+                color={
+                  colors.mutedText
+                }
+              />
+
+              <Text
+                style={[
+                  styles.eventMetaText,
+                  {
+                    color:
+                      colors.mutedText,
+                  },
+                ]}
+              >
+                9:00 AM - 3:00 PM
+              </Text>
+            </View>
+
+            <View
+              style={styles.eventMeta}
+            >
+              <Ionicons
+                name="location-outline"
+                size={15}
+                color={
+                  colors.mutedText
+                }
+              />
+
+              <Text
+                style={[
+                  styles.eventMetaText,
+                  {
+                    color:
+                      colors.mutedText,
+                  },
+                ]}
+              >
+                Pristine Eye Care
+              </Text>
+            </View>
+          </View>
+
+          <Ionicons
+            name="chevron-forward"
+            size={21}
+            color={
+              colors.mutedText
+            }
+          />
+        </Pressable>
+
         {/* QUICK ACTIONS */}
 
         <Text
-          style={styles.sectionTitle}
+          style={[
+            styles.sectionTitle,
+            {
+              color:
+                colors.text,
+            },
+          ]}
         >
           Quick Actions
         </Text>
 
         <View style={styles.grid}>
-          {/* EYE TEST */}
-
           <Pressable
-            style={styles.box}
-            onPress={() =>
-              navigation.navigate(
-                "Eye Test" as never
-              )
-            }
+            style={[
+              styles.box,
+              {
+                backgroundColor:
+                  colors.card,
+                borderColor:
+                  colors.border,
+              },
+            ]}
+            onPress={handleEyeTest}
           >
             <Ionicons
               name="eye-outline"
@@ -308,16 +628,28 @@ export default function HomeScreen({
             />
 
             <Text
-              style={styles.boxText}
+              style={[
+                styles.boxText,
+                {
+                  color:
+                    colors.text,
+                },
+              ]}
             >
               Eye Test
             </Text>
           </Pressable>
 
-          {/* APPOINTMENTS */}
-
           <Pressable
-            style={styles.box}
+            style={[
+              styles.box,
+              {
+                backgroundColor:
+                  colors.card,
+                borderColor:
+                  colors.border,
+              },
+            ]}
             onPress={
               handleBookAppointment
             }
@@ -329,9 +661,49 @@ export default function HomeScreen({
             />
 
             <Text
-              style={styles.boxText}
+              style={[
+                styles.boxText,
+                {
+                  color:
+                    colors.text,
+                },
+              ]}
             >
               Appointments
+            </Text>
+          </Pressable>
+
+          <Pressable
+            style={[
+              styles.box,
+              {
+                backgroundColor:
+                  colors.card,
+                borderColor:
+                  colors.border,
+                marginTop: 14,
+              },
+            ]}
+            onPress={
+              handleCustomerCare
+            }
+          >
+            <Ionicons
+              name="headset-outline"
+              size={34}
+              color={PRIMARY}
+            />
+
+            <Text
+              style={[
+                styles.boxText,
+                {
+                  color:
+                    colors.text,
+                },
+              ]}
+            >
+              Customer Care
             </Text>
           </Pressable>
         </View>
@@ -339,11 +711,47 @@ export default function HomeScreen({
         {/* VERSION */}
 
         <Text
-          style={styles.footer}
+          style={[
+            styles.footer,
+            {
+              color:
+                colors.secondaryText,
+            },
+          ]}
         >
           Version 1.0.0
         </Text>
       </ScrollView>
+
+      {/* ==========================================
+          FIXED CHAT BUTTON
+          
+          IMPORTANT:
+          This is OUTSIDE the ScrollView.
+          It will therefore remain fixed while
+          the Home screen is being scrolled.
+          ========================================== */}
+
+      <Pressable
+        style={styles.chatButton}
+        onPress={handleChat}
+      >
+        <Ionicons
+          name="chatbubble-ellipses"
+          size={26}
+          color="#FFFFFF"
+        />
+
+        <View
+          style={styles.chatBadge}
+        >
+          <Text
+            style={styles.chatBadgeText}
+          >
+            1
+          </Text>
+        </View>
+      </Pressable>
     </SafeAreaView>
   );
 }
@@ -351,13 +759,12 @@ export default function HomeScreen({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F8F8F8",
   },
 
   content: {
     paddingHorizontal: 20,
-    paddingTop: 32,
-    paddingBottom: 30,
+    paddingTop: 30,
+    paddingBottom: 110,
   },
 
   header: {
@@ -376,18 +783,15 @@ const styles = StyleSheet.create({
   greeting: {
     fontSize: 20,
     fontWeight: "600",
-    color: "#666666",
     marginBottom: 6,
   },
 
   welcome: {
     fontSize: 18,
-    color: "#777777",
     lineHeight: 24,
   },
 
   userName: {
-    color: PRIMARY,
     fontWeight: "700",
   },
 
@@ -400,14 +804,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 7,
-    marginTop: 0,
   },
 
   notificationButton: {
     width: 42,
     height: 42,
     borderRadius: 11,
-    backgroundColor: "#FFF0F1",
     alignItems: "center",
     justifyContent: "center",
     position: "relative",
@@ -449,9 +851,24 @@ const styles = StyleSheet.create({
   },
 
   card: {
-    backgroundColor: PRIMARY,
     borderRadius: 18,
     padding: 22,
+  },
+
+  appointmentHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+
+  appointmentIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 14,
+    backgroundColor:
+      "rgba(255,255,255,0.15)",
+    alignItems: "center",
+    justifyContent: "center",
   },
 
   cardTitle: {
@@ -462,8 +879,9 @@ const styles = StyleSheet.create({
 
   cardText: {
     color: "#FFFFFF",
-    fontSize: 16,
-    marginTop: 10,
+    fontSize: 15,
+    marginTop: 8,
+    opacity: 0.9,
   },
 
   cardButton: {
@@ -476,29 +894,86 @@ const styles = StyleSheet.create({
 
   cardButtonText: {
     color: PRIMARY,
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: "700",
   },
 
   sectionTitle: {
-    marginTop: 35,
-    marginBottom: 18,
-    fontSize: 22,
+    marginTop: 28,
+    marginBottom: 14,
+    fontSize: 20,
     fontWeight: "700",
-    color: "#222222",
+  },
+
+  eventCard: {
+    borderRadius: 17,
+    padding: 15,
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 1,
+    elevation: 3,
+    shadowColor: "#000000",
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+  },
+
+  eventDate: {
+    width: 55,
+    height: 62,
+    borderRadius: 13,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  eventMonth: {
+    fontSize: 10,
+    fontWeight: "800",
+  },
+
+  eventDay: {
+    fontSize: 25,
+    fontWeight: "800",
+    marginTop: 1,
+  },
+
+  eventInfo: {
+    flex: 1,
+    marginLeft: 13,
+  },
+
+  eventTitle: {
+    fontSize: 15,
+    fontWeight: "700",
+    marginBottom: 7,
+  },
+
+  eventMeta: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 3,
+  },
+
+  eventMetaText: {
+    marginLeft: 5,
+    fontSize: 12,
   },
 
   grid: {
     flexDirection: "row",
+    flexWrap: "wrap",
     justifyContent: "space-between",
   },
 
   box: {
     width: "47%",
-    backgroundColor: "#FFFFFF",
     borderRadius: 16,
-    paddingVertical: 28,
+    paddingVertical: 25,
     alignItems: "center",
+    borderWidth: 1,
     elevation: 3,
     shadowColor: "#000000",
     shadowOpacity: 0.12,
@@ -513,13 +988,66 @@ const styles = StyleSheet.create({
     marginTop: 12,
     fontSize: 16,
     fontWeight: "600",
-    color: "#333333",
+  },
+
+  /*
+   * ==========================================
+   * FIXED CHAT BUTTON
+   * ==========================================
+   */
+
+  chatButton: {
+    position: "absolute",
+    right: 20,
+    bottom: 20,
+
+    width: 58,
+    height: 58,
+    borderRadius: 29,
+
+    backgroundColor: PRIMARY,
+
+    alignItems: "center",
+    justifyContent: "center",
+
+    elevation: 10,
+
+    shadowColor: "#000000",
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+
+    zIndex: 100,
+  },
+
+  chatBadge: {
+    position: "absolute",
+    top: 1,
+    right: 0,
+
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+
+    backgroundColor: "#FFFFFF",
+
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  chatBadgeText: {
+    color: PRIMARY,
+    fontSize: 10,
+    fontWeight: "800",
   },
 
   footer: {
     textAlign: "center",
-    color: "#888888",
-    marginTop: 40,
+    marginTop: 35,
     marginBottom: 20,
     fontSize: 14,
   },

@@ -1,5 +1,9 @@
 import React from "react";
-import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+
+import {
+  createBottomTabNavigator,
+} from "@react-navigation/bottom-tabs";
+
 import Ionicons from "@expo/vector-icons/Ionicons";
 
 import HomeScreen from "../screens/HomeScreen";
@@ -7,47 +11,63 @@ import AppointmentScreen from "../screens/AppointmentScreen";
 import EyeTestScreen from "../screens/EyeTestScreen";
 import GalleryScreen from "../screens/GalleryScreen";
 import ProfileScreen from "../screens/ProfileScreen";
+import SettingsScreen from "../screens/SettingsScreen";
 
-const Tab = createBottomTabNavigator();
+import {
+  useTheme,
+} from "../context/ThemeContext";
 
 const PRIMARY = "#B3000F";
 
+export type BottomTabParamList = {
+  Home: undefined;
+  Appointments: undefined;
+  "Eye Test": undefined;
+  Gallery: undefined;
+  Profile: undefined;
+  Settings: undefined;
+};
+
+const Tab =
+  createBottomTabNavigator<BottomTabParamList>();
+
 export default function BottomNavigator() {
+  const { colors } = useTheme();
+
   return (
     <Tab.Navigator
       initialRouteName="Home"
       screenOptions={({ route }) => ({
         headerShown: false,
 
-        tabBarActiveTintColor: PRIMARY,
-        tabBarInactiveTintColor: "#888888",
+        tabBarActiveTintColor:
+          PRIMARY,
 
-        /*
-         * Make the bottom navigation occupy
-         * the entire available width.
-         */
+        tabBarInactiveTintColor:
+          colors.secondaryText,
+
         tabBarStyle: {
           height: 65,
           paddingTop: 6,
           paddingBottom: 8,
-          backgroundColor: "#FFFFFF",
+
+          backgroundColor:
+            colors.tabBar,
+
           borderTopWidth: 1,
-          borderTopColor: "#EEEEEE",
+
+          borderTopColor:
+            colors.border,
+
           elevation: 8,
         },
 
-        /*
-         * Each tab gets equal space.
-         *
-         * 5 tabs = 20% each.
-         */
         tabBarItemStyle: {
           flex: 1,
-          width: "20%",
         },
 
         tabBarLabelStyle: {
-          fontSize: 11,
+          fontSize: 10,
           fontWeight: "600",
           marginTop: 1,
         },
@@ -56,7 +76,10 @@ export default function BottomNavigator() {
           marginBottom: -2,
         },
 
-        tabBarIcon: ({ color, size }) => {
+        tabBarIcon: ({
+          color,
+          size,
+        }) => {
           let iconName:
             | keyof typeof Ionicons.glyphMap
             | undefined;
@@ -82,6 +105,10 @@ export default function BottomNavigator() {
               iconName = "person";
               break;
 
+            case "Settings":
+              iconName = "settings";
+              break;
+
             default:
               iconName = "ellipse";
           }
@@ -96,34 +123,34 @@ export default function BottomNavigator() {
         },
       })}
     >
-      {/* HOME */}
       <Tab.Screen
         name="Home"
         component={HomeScreen}
       />
 
-      {/* APPOINTMENTS */}
       <Tab.Screen
         name="Appointments"
         component={AppointmentScreen}
       />
 
-      {/* EYE TEST */}
       <Tab.Screen
         name="Eye Test"
         component={EyeTestScreen}
       />
 
-      {/* GALLERY */}
       <Tab.Screen
         name="Gallery"
         component={GalleryScreen}
       />
 
-      {/* PROFILE */}
       <Tab.Screen
         name="Profile"
         component={ProfileScreen}
+      />
+
+      <Tab.Screen
+        name="Settings"
+        component={SettingsScreen}
       />
     </Tab.Navigator>
   );
