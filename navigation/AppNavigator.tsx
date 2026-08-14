@@ -12,6 +12,7 @@ import CreatePasswordScreen from "../screens/CreatePasswordScreen";
 import EnterPasswordScreen from "../screens/EnterPasswordScreen";
 import NotificationsScreen from "../screens/NotificationsScreen";
 import ChatScreen from "../screens/ChatScreen";
+import CustomerCareScreen from "../screens/CustomerCareScreen";
 import UpcomingEventScreen from "../screens/UpcomingEventScreen";
 
 import BottomNavigator from "./BottomNavigator";
@@ -42,6 +43,8 @@ export type RootStackParamList = {
   Notifications: undefined;
 
   Chat: undefined;
+
+  "Customer Care": undefined;
 
   UpcomingEvent: undefined;
 };
@@ -100,6 +103,11 @@ export default function AppNavigator() {
       <Stack.Screen
         name="Chat"
         component={ChatScreen}
+      />
+
+      <Stack.Screen
+        name="Customer Care"
+        component={CustomerCareScreen}
       />
 
       <Stack.Screen

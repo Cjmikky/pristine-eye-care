@@ -1,5 +1,5 @@
 import React, {
-  useEffect,
+  useCallback,
   useState,
 } from "react";
 
@@ -36,6 +36,10 @@ import {
 import Ionicons from "@expo/vector-icons/Ionicons";
 
 import {
+  useFocusEffect,
+} from "@react-navigation/native";
+
+import {
   auth,
   db,
 } from "../firebase/config";
@@ -59,22 +63,10 @@ const PRIMARY = "#B3000F";
 export default function HomeScreen({
   navigation,
 }: Props) {
-  /*
-   * ========================================
-   * THEME
-   * ========================================
-   */
-
   const {
     isDark,
     colors,
   } = useTheme();
-
-  /*
-   * ========================================
-   * USER
-   * ========================================
-   */
 
   const [
     userName,
@@ -105,23 +97,6 @@ export default function HomeScreen({
           return;
         }
 
-        console.log(
-          "===================================="
-        );
-
-        console.log(
-          "LOADING CUSTOMER PROFILE"
-        );
-
-        console.log(
-          "Firebase UID:",
-          currentUser.uid
-        );
-
-        console.log(
-          "===================================="
-        );
-
         const usersRef =
           collection(
             db,
@@ -129,7 +104,8 @@ export default function HomeScreen({
           );
 
         /*
-         * Search by authUid
+         * Primary search:
+         * authUid
          */
 
         const customerQuery =
@@ -147,29 +123,18 @@ export default function HomeScreen({
             customerQuery
           );
 
-        let userData: any = null;
-
-        /*
-         * ========================================
-         * AUTH UID SEARCH
-         * ========================================
-         */
+        let userData: any =
+          null;
 
         if (
           !snapshot.empty
         ) {
           userData =
             snapshot.docs[0].data();
-
-          console.log(
-            "Customer document:",
-            snapshot.docs[0].id
-          );
         } else {
           /*
-           * ========================================
-           * FALLBACK UID SEARCH
-           * ========================================
+           * Fallback:
+           * uid
            */
 
           const uidQuery =
@@ -192,40 +157,13 @@ export default function HomeScreen({
           ) {
             userData =
               uidSnapshot.docs[0].data();
-
-            console.log(
-              "Customer document:",
-              uidSnapshot.docs[0].id
-            );
           }
         }
 
-        /*
-         * ========================================
-         * CUSTOMER NOT FOUND
-         * ========================================
-         */
-
         if (!userData) {
-          console.log(
-            "Customer profile not found."
-          );
-
           setUserName("User");
-
           return;
         }
-
-        console.log(
-          "Customer profile:",
-          userData
-        );
-
-        /*
-         * ========================================
-         * FIRST NAME
-         * ========================================
-         */
 
         if (
           userData.fullName
@@ -236,24 +174,15 @@ export default function HomeScreen({
             ).trim();
 
           const firstName =
-            fullName
-              .split(/\s+/)[0];
+            fullName.split(
+              /\s+/
+            )[0];
 
-          if (
-            firstName
-          ) {
-            setUserName(
-              firstName
-            );
-          } else {
-            setUserName(
-              "User"
-            );
-          }
-        } else {
           setUserName(
-            "User"
+            firstName || "User"
           );
+        } else {
+          setUserName("User");
         }
       } catch (error) {
         console.log(
@@ -261,25 +190,23 @@ export default function HomeScreen({
           error
         );
 
-        setUserName(
-          "User"
-        );
+        setUserName("User");
       } finally {
-        setLoadingUser(
-          false
-        );
+        setLoadingUser(false);
       }
     };
 
   /*
    * ========================================
-   * LOAD PROFILE
+   * REFRESH PROFILE WHEN HOME OPENS
    * ========================================
    */
 
-  useEffect(() => {
-    loadUserData();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      loadUserData();
+    }, [])
+  );
 
   /*
    * ========================================
@@ -301,6 +228,42 @@ export default function HomeScreen({
       }
 
       return "Good Night";
+    };
+
+  /*
+   * ========================================
+   * NAVIGATION
+   * ========================================
+   */
+
+  const handleCustomerCare =
+    () => {
+      const parent =
+        navigation.getParent();
+
+      parent?.navigate(
+        "Customer Care" as never
+      );
+    };
+
+  const handleChat =
+    () => {
+      const parent =
+        navigation.getParent();
+
+      parent?.navigate(
+        "Chat" as never
+      );
+    };
+
+  const handleUpcomingEvent =
+    () => {
+      const parent =
+        navigation.getParent();
+
+      parent?.navigate(
+        "UpcomingEvent" as never
+      );
     };
 
   /*
@@ -334,7 +297,9 @@ export default function HomeScreen({
                     ?.navigate(
                       "Login" as never
                     );
-                } catch (error) {
+                } catch (
+                  error
+                ) {
                   console.log(
                     "Logout error:",
                     error
@@ -372,10 +337,6 @@ export default function HomeScreen({
         "right",
       ]}
     >
-      {/* ================================= */}
-      {/* STATUS BAR */}
-      {/* ================================= */}
-
       <StatusBar
         barStyle={
           isDark
@@ -391,14 +352,11 @@ export default function HomeScreen({
         showsVerticalScrollIndicator={
           false
         }
-        style={{
-          backgroundColor:
-            colors.background,
-        }}
         contentContainerStyle={
           styles.scrollContent
         }
       >
+
         {/* ================================= */}
         {/* HEADER */}
         {/* ================================= */}
@@ -408,18 +366,19 @@ export default function HomeScreen({
             styles.header
           }
         >
-          {/* GREETING */}
 
           <View
             style={
               styles.greetingContainer
             }
           >
+
             <View
               style={
                 styles.greetingRow
               }
             >
+
               <Text
                 style={[
                   styles.greeting,
@@ -437,13 +396,10 @@ export default function HomeScreen({
                   styles.moon
                 }
               >
-                {isDark
-                  ? "🌙"
-                  : "☀️"}
+                🌙
               </Text>
-            </View>
 
-            {/* WELCOME */}
+            </View>
 
             {loadingUser ? (
               <ActivityIndicator
@@ -459,6 +415,7 @@ export default function HomeScreen({
                   styles.welcomeRow
                 }
               >
+
                 <Text
                   style={[
                     styles.welcomeText,
@@ -467,31 +424,41 @@ export default function HomeScreen({
                         colors.secondaryText,
                     },
                   ]}
+                  numberOfLines={1}
                 >
                   Welcome back,
                 </Text>
 
                 <Text
-                  style={
-                    styles.userName
-                  }
+                  style={[
+                    styles.userName,
+                    {
+                      color:
+                        PRIMARY,
+                    },
+                  ]}
                   numberOfLines={1}
                   ellipsizeMode="tail"
                 >
                   {" "}
                   {userName}
                 </Text>
+
               </View>
             )}
+
           </View>
 
+          {/* ================================= */}
           {/* HEADER ACTIONS */}
+          {/* ================================= */}
 
           <View
             style={
               styles.headerActions
             }
           >
+
             {/* NOTIFICATIONS */}
 
             <Pressable
@@ -499,7 +466,9 @@ export default function HomeScreen({
                 styles.notificationButton,
                 {
                   backgroundColor:
-                    colors.primaryLight,
+                    colors.card,
+                  borderColor:
+                    colors.border,
                 },
               ]}
               onPress={() =>
@@ -510,9 +479,10 @@ export default function HomeScreen({
                   )
               }
             >
+
               <Ionicons
                 name="notifications-outline"
-                size={23}
+                size={22}
                 color={PRIMARY}
               />
 
@@ -521,6 +491,7 @@ export default function HomeScreen({
                   styles.notificationBadge
                 }
               >
+
                 <Text
                   style={
                     styles.badgeText
@@ -528,7 +499,9 @@ export default function HomeScreen({
                 >
                   1
                 </Text>
+
               </View>
+
             </Pressable>
 
             {/* LOGOUT */}
@@ -541,6 +514,7 @@ export default function HomeScreen({
                 handleLogout
               }
             >
+
               <Ionicons
                 name="log-out-outline"
                 size={18}
@@ -554,8 +528,11 @@ export default function HomeScreen({
               >
                 Logout
               </Text>
+
             </Pressable>
+
           </View>
+
         </View>
 
         {/* ================================= */}
@@ -567,16 +544,19 @@ export default function HomeScreen({
             styles.appointmentCard
           }
         >
+
           <View
             style={
               styles.appointmentTop
             }
           >
+
             <View
               style={
                 styles.appointmentInfo
               }
             >
+
               <Text
                 style={
                   styles.appointmentTitle
@@ -592,6 +572,7 @@ export default function HomeScreen({
               >
                 No upcoming appointment.
               </Text>
+
             </View>
 
             <View
@@ -599,12 +580,15 @@ export default function HomeScreen({
                 styles.calendarIconContainer
               }
             >
+
               <Ionicons
                 name="calendar-outline"
                 size={34}
                 color="#FFFFFF"
               />
+
             </View>
+
           </View>
 
           <Pressable
@@ -617,6 +601,7 @@ export default function HomeScreen({
               )
             }
           >
+
             <Text
               style={
                 styles.bookButtonText
@@ -624,7 +609,9 @@ export default function HomeScreen({
             >
               Book Appointment
             </Text>
+
           </Pressable>
+
         </View>
 
         {/* ================================= */}
@@ -653,14 +640,11 @@ export default function HomeScreen({
                 colors.border,
             },
           ]}
-          onPress={() =>
-            navigation
-              .getParent()
-              ?.navigate(
-                "UpcomingEvent" as never
-              )
+          onPress={
+            handleUpcomingEvent
           }
         >
+
           <View
             style={[
               styles.dateBox,
@@ -670,6 +654,7 @@ export default function HomeScreen({
               },
             ]}
           >
+
             <Text
               style={
                 styles.dateMonth
@@ -685,6 +670,7 @@ export default function HomeScreen({
             >
               24
             </Text>
+
           </View>
 
           <View
@@ -692,6 +678,7 @@ export default function HomeScreen({
               styles.eventInfo
             }
           >
+
             <Text
               style={[
                 styles.eventTitle,
@@ -709,6 +696,7 @@ export default function HomeScreen({
                 styles.eventDetail
               }
             >
+
               <Ionicons
                 name="time-outline"
                 size={17}
@@ -728,6 +716,7 @@ export default function HomeScreen({
               >
                 9:00 AM - 3:00 PM
               </Text>
+
             </View>
 
             <View
@@ -735,6 +724,7 @@ export default function HomeScreen({
                 styles.eventDetail
               }
             >
+
               <Ionicons
                 name="location-outline"
                 size={17}
@@ -754,7 +744,9 @@ export default function HomeScreen({
               >
                 Pristine Eye Care
               </Text>
+
             </View>
+
           </View>
 
           <Ionicons
@@ -764,6 +756,7 @@ export default function HomeScreen({
               colors.secondaryText
             }
           />
+
         </Pressable>
 
         {/* ================================= */}
@@ -787,6 +780,7 @@ export default function HomeScreen({
             styles.quickActions
           }
         >
+
           {/* EYE TEST */}
 
           <Pressable
@@ -805,6 +799,7 @@ export default function HomeScreen({
               )
             }
           >
+
             <Ionicons
               name="eye-outline"
               size={42}
@@ -822,6 +817,7 @@ export default function HomeScreen({
             >
               Eye Test
             </Text>
+
           </Pressable>
 
           {/* APPOINTMENTS */}
@@ -842,6 +838,7 @@ export default function HomeScreen({
               )
             }
           >
+
             <Ionicons
               name="calendar-outline"
               size={42}
@@ -859,9 +856,10 @@ export default function HomeScreen({
             >
               Appointments
             </Text>
+
           </Pressable>
 
-          {/* GALLERY */}
+          {/* CUSTOMER CARE */}
 
           <Pressable
             style={[
@@ -873,14 +871,13 @@ export default function HomeScreen({
                   colors.border,
               },
             ]}
-            onPress={() =>
-              navigation.navigate(
-                "Gallery" as never
-              )
+            onPress={
+              handleCustomerCare
             }
           >
+
             <Ionicons
-              name="images-outline"
+              name="headset-outline"
               size={42}
               color={PRIMARY}
             />
@@ -894,46 +891,11 @@ export default function HomeScreen({
                 },
               ]}
             >
-              Gallery
+              Customer Care
             </Text>
+
           </Pressable>
 
-          {/* PROFILE */}
-
-          <Pressable
-            style={[
-              styles.quickAction,
-              {
-                backgroundColor:
-                  colors.card,
-                borderColor:
-                  colors.border,
-              },
-            ]}
-            onPress={() =>
-              navigation.navigate(
-                "Profile" as never
-              )
-            }
-          >
-            <Ionicons
-              name="person-outline"
-              size={42}
-              color={PRIMARY}
-            />
-
-            <Text
-              style={[
-                styles.quickActionText,
-                {
-                  color:
-                    colors.text,
-                },
-              ]}
-            >
-              Profile
-            </Text>
-          </Pressable>
         </View>
 
         {/* ================================= */}
@@ -952,161 +914,285 @@ export default function HomeScreen({
           Your Pristine Eye Care account
           is securely protected.
         </Text>
+
+        <Text
+          style={[
+            styles.footer,
+            {
+              color:
+                colors.secondaryText,
+            },
+          ]}
+        >
+          Version 1.0.0
+        </Text>
+
       </ScrollView>
+
+      {/* ================================= */}
+      {/* FIXED CHAT BUTTON */}
+      {/* ================================= */}
+
+      <Pressable
+        style={
+          styles.chatButton
+        }
+        onPress={
+          handleChat
+        }
+      >
+
+        <Ionicons
+          name="chatbubble-ellipses"
+          size={26}
+          color="#FFFFFF"
+        />
+
+        <View
+          style={
+            styles.chatBadge
+          }
+        >
+
+          <Text
+            style={
+              styles.chatBadgeText
+            }
+          >
+            1
+          </Text>
+
+        </View>
+
+      </Pressable>
+
     </SafeAreaView>
   );
 }
 
 /*
  * ========================================
- * STATIC STYLES
+ * STYLES
  * ========================================
- *
- * Theme-dependent colours are intentionally
- * NOT placed here.
  */
 
 const styles =
   StyleSheet.create({
+
     container: {
       flex: 1,
     },
 
     scrollContent: {
-      paddingHorizontal: 8,
+      paddingHorizontal: 16,
       paddingTop: 10,
-      paddingBottom: 30,
+      paddingBottom: 105,
     },
 
     /*
+     * ========================================
      * HEADER
+     * ========================================
      */
 
     header: {
       position: "relative",
       width: "100%",
       marginBottom: 30,
-      minHeight: 88,
+      minHeight: 82,
     },
+
+    /*
+     * Reduced reserved space here.
+     * This gives the customer's name more
+     * room before the header buttons.
+     */
 
     greetingContainer: {
       width: "100%",
-      paddingRight: 145,
+      paddingRight: 132,
     },
 
     greetingRow: {
-      flexDirection: "row",
-      alignItems: "center",
+      flexDirection:
+        "row",
+      alignItems:
+        "center",
     },
 
     greeting: {
-      fontSize: 24,
+      fontSize: 22,
       fontWeight: "700",
     },
 
     moon: {
-      fontSize: 22,
+      fontSize: 21,
       marginLeft: 5,
     },
 
+    /*
+     * Welcome row now has enough room
+     * for names such as Chijioke.
+     */
+
     welcomeRow: {
-      flexDirection: "row",
-      alignItems: "center",
-      marginTop: 10,
+      flexDirection:
+        "row",
+      alignItems:
+        "center",
+      marginTop: 7,
       width: "100%",
+      minWidth: 0,
     },
 
     welcomeText: {
-      fontSize: 18,
-      lineHeight: 24,
+      fontSize: 16,
+      lineHeight: 22,
       flexShrink: 0,
     },
 
     userName: {
-      color: PRIMARY,
-      fontSize: 18,
-      lineHeight: 24,
+      fontSize: 17,
+      lineHeight: 22,
       fontWeight: "700",
       flexShrink: 1,
+      minWidth: 0,
     },
 
     nameLoader: {
-      alignSelf: "flex-start",
-      marginTop: 12,
+      alignSelf:
+        "flex-start",
+      marginTop: 10,
     },
 
     /*
+     * ========================================
      * HEADER ACTIONS
+     * ========================================
      */
 
     headerActions: {
       position: "absolute",
       top: 0,
       right: 0,
-      flexDirection: "row",
-      alignItems: "center",
+
+      flexDirection:
+        "row",
+
+      alignItems:
+        "center",
     },
 
     notificationButton: {
-      width: 48,
-      height: 48,
+      width: 46,
+      height: 46,
+
       borderRadius: 12,
-      alignItems: "center",
-      justifyContent: "center",
-      marginRight: 6,
-      position: "relative",
+
+      borderWidth: 1,
+
+      alignItems:
+        "center",
+
+      justifyContent:
+        "center",
+
+      marginRight: 5,
+
+      position:
+        "relative",
     },
 
     notificationBadge: {
-      position: "absolute",
-      top: 4,
-      right: 4,
+      position:
+        "absolute",
+
+      top: 3,
+      right: 3,
+
       width: 17,
       height: 17,
+
       borderRadius: 9,
-      backgroundColor: PRIMARY,
-      alignItems: "center",
-      justifyContent: "center",
+
+      backgroundColor:
+        PRIMARY,
+
+      alignItems:
+        "center",
+
+      justifyContent:
+        "center",
     },
 
     badgeText: {
-      color: "#FFFFFF",
+      color:
+        "#FFFFFF",
+
       fontSize: 10,
-      fontWeight: "700",
+
+      fontWeight:
+        "700",
     },
 
     logoutButton: {
-      height: 46,
-      paddingHorizontal: 10,
+      height: 44,
+
+      paddingHorizontal: 9,
+
       borderRadius: 11,
-      backgroundColor: "#E00000",
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "center",
+
+      backgroundColor:
+        "#E00000",
+
+      flexDirection:
+        "row",
+
+      alignItems:
+        "center",
+
+      justifyContent:
+        "center",
     },
 
     logoutText: {
-      color: "#FFFFFF",
-      fontSize: 13,
-      fontWeight: "700",
+      color:
+        "#FFFFFF",
+
+      fontSize: 12,
+
+      fontWeight:
+        "700",
+
       marginLeft: 4,
     },
 
     /*
+     * ========================================
      * APPOINTMENT
+     * ========================================
      */
 
     appointmentCard: {
-      backgroundColor: "#D90000",
+      backgroundColor:
+        "#D90000",
+
       borderRadius: 24,
+
       padding: 25,
+
       marginBottom: 34,
     },
 
     appointmentTop: {
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "space-between",
+      flexDirection:
+        "row",
+
+      alignItems:
+        "center",
+
+      justifyContent:
+        "space-between",
     },
 
     appointmentInfo: {
@@ -1114,83 +1200,138 @@ const styles =
     },
 
     appointmentTitle: {
-      color: "#FFFFFF",
+      color:
+        "#FFFFFF",
+
       fontSize: 23,
-      fontWeight: "700",
+
+      fontWeight:
+        "700",
     },
 
     appointmentSubtitle: {
-      color: "#FFFFFF",
+      color:
+        "#FFFFFF",
+
       fontSize: 16,
+
       marginTop: 10,
     },
 
     calendarIconContainer: {
       width: 58,
       height: 58,
+
       borderRadius: 15,
-      backgroundColor: "#E52B2B",
-      alignItems: "center",
-      justifyContent: "center",
+
+      backgroundColor:
+        "#E52B2B",
+
+      alignItems:
+        "center",
+
+      justifyContent:
+        "center",
     },
 
     bookButton: {
       height: 54,
+
       borderRadius: 14,
-      backgroundColor: "#FFFFFF",
-      alignItems: "center",
-      justifyContent: "center",
+
+      backgroundColor:
+        "#FFFFFF",
+
+      alignItems:
+        "center",
+
+      justifyContent:
+        "center",
+
       marginTop: 25,
     },
 
     bookButtonText: {
-      color: PRIMARY,
+      color:
+        PRIMARY,
+
       fontSize: 17,
-      fontWeight: "700",
+
+      fontWeight:
+        "700",
     },
 
     /*
+     * ========================================
      * SECTIONS
+     * ========================================
      */
 
     sectionTitle: {
       fontSize: 23,
-      fontWeight: "700",
+
+      fontWeight:
+        "700",
+
       marginBottom: 15,
     },
 
     /*
+     * ========================================
      * EVENT
+     * ========================================
      */
 
     eventCard: {
       borderRadius: 20,
+
       borderWidth: 1,
+
       padding: 18,
-      flexDirection: "row",
-      alignItems: "center",
+
+      flexDirection:
+        "row",
+
+      alignItems:
+        "center",
+
       marginBottom: 34,
     },
 
     dateBox: {
       width: 64,
       height: 68,
+
       borderRadius: 14,
-      alignItems: "center",
-      justifyContent: "center",
+
+      alignItems:
+        "center",
+
+      justifyContent:
+        "center",
+
       marginRight: 15,
     },
 
     dateMonth: {
-      color: PRIMARY,
+      color:
+        PRIMARY,
+
       fontSize: 12,
-      fontWeight: "700",
+
+      fontWeight:
+        "700",
     },
 
     dateDay: {
-      color: PRIMARY,
+      color:
+        PRIMARY,
+
       fontSize: 27,
-      fontWeight: "700",
+
+      fontWeight:
+        "700",
+
       marginTop: 2,
     },
 
@@ -1200,55 +1341,182 @@ const styles =
 
     eventTitle: {
       fontSize: 17,
-      fontWeight: "700",
+
+      fontWeight:
+        "700",
+
       marginBottom: 9,
     },
 
     eventDetail: {
-      flexDirection: "row",
-      alignItems: "center",
+      flexDirection:
+        "row",
+
+      alignItems:
+        "center",
+
       marginBottom: 5,
     },
 
     eventDetailText: {
       fontSize: 13,
+
       marginLeft: 7,
     },
 
     /*
+     * ========================================
      * QUICK ACTIONS
+     * ========================================
      */
 
     quickActions: {
-      flexDirection: "row",
-      flexWrap: "wrap",
-      justifyContent: "space-between",
+      flexDirection:
+        "row",
+
+      flexWrap:
+        "wrap",
+
+      justifyContent:
+        "space-between",
     },
 
     quickAction: {
       width: "48%",
+
       minHeight: 142,
+
       borderRadius: 20,
+
       borderWidth: 1,
-      alignItems: "center",
-      justifyContent: "center",
+
+      alignItems:
+        "center",
+
+      justifyContent:
+        "center",
+
       marginBottom: 14,
     },
 
     quickActionText: {
       fontSize: 16,
-      fontWeight: "600",
+
+      fontWeight:
+        "600",
+
       marginTop: 14,
     },
 
     /*
+     * ========================================
      * SECURITY
+     * ========================================
      */
 
     securityText: {
-      textAlign: "center",
+      textAlign:
+        "center",
+
       fontSize: 12,
+
       marginTop: 20,
+
       lineHeight: 18,
     },
+
+    footer: {
+      textAlign:
+        "center",
+
+      fontSize: 11,
+
+      marginTop: 8,
+    },
+
+    /*
+     * ========================================
+     * FIXED CHAT BUTTON
+     * ========================================
+     */
+
+    chatButton: {
+      position:
+        "absolute",
+
+      right: 20,
+
+      bottom: 24,
+
+      width: 58,
+
+      height: 58,
+
+      borderRadius: 29,
+
+      backgroundColor:
+        PRIMARY,
+
+      alignItems:
+        "center",
+
+      justifyContent:
+        "center",
+
+      elevation: 8,
+
+      shadowColor:
+        "#000000",
+
+      shadowOffset: {
+        width: 0,
+        height: 4,
+      },
+
+      shadowOpacity:
+        0.25,
+
+      shadowRadius:
+        6,
+    },
+
+    chatBadge: {
+      position:
+        "absolute",
+
+      top: -2,
+
+      right: -2,
+
+      width: 19,
+
+      height: 19,
+
+      borderRadius: 10,
+
+      backgroundColor:
+        "#E00000",
+
+      alignItems:
+        "center",
+
+      justifyContent:
+        "center",
+
+      borderWidth: 2,
+
+      borderColor:
+        "#FFFFFF",
+    },
+
+    chatBadgeText: {
+      color:
+        "#FFFFFF",
+
+      fontSize: 10,
+
+      fontWeight:
+        "700",
+    },
+
   });

@@ -54,17 +54,6 @@ const PRIMARY = "#B3000F";
  * ========================================
  * INTERNAL FIREBASE AUTH IDENTIFIER
  * ========================================
- *
- * The customer logs in with their phone
- * number.
- *
- * Firebase Email/Password Authentication
- * internally uses:
- *
- * 08038948686@pristine-auth.local
- *
- * This identifier is never shown to
- * the customer.
  */
 
 const getFirebaseAuthIdentifier = (
@@ -97,316 +86,293 @@ export default function EnterPasswordScreen({
    * ========================================
    */
 
-  const handleLogin =
-    async () => {
-      if (loading) {
+  const handleLogin = async () => {
+    if (loading) {
+      return;
+    }
+
+    /*
+     * PASSWORD VALIDATION
+     */
+
+    if (!password.trim()) {
+      Alert.alert(
+        "Password Required",
+        "Please enter your password."
+      );
+
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      console.log(
+        "===================================="
+      );
+
+      console.log(
+        "CUSTOMER PASSWORD LOGIN"
+      );
+
+      console.log(
+        "Phone:",
+        phoneNumber
+      );
+
+      console.log(
+        "===================================="
+      );
+
+      /*
+       * FIND CUSTOMER
+       */
+
+      const usersRef =
+        collection(
+          db,
+          "users"
+        );
+
+      const customerQuery =
+        query(
+          usersRef,
+          where(
+            "phone",
+            "==",
+            phoneNumber
+          )
+        );
+
+      const snapshot =
+        await getDocs(
+          customerQuery
+        );
+
+      console.log(
+        "Customer found:",
+        !snapshot.empty
+      );
+
+      /*
+       * CUSTOMER NOT FOUND
+       */
+
+      if (snapshot.empty) {
+        Alert.alert(
+          "Account Not Found",
+          "We could not find your Pristine Eye Care account."
+        );
+
         return;
       }
 
       /*
-       * ==============================
-       * PASSWORD VALIDATION
-       * ==============================
+       * GET CUSTOMER
        */
 
-      if (!password.trim()) {
+      const customerDoc =
+        snapshot.docs[0];
+
+      const customer =
+        customerDoc.data();
+
+      console.log(
+        "Customer document:",
+        customerDoc.id
+      );
+
+      console.log(
+        "Customer data:",
+        customer
+      );
+
+      /*
+       * CHECK ACCOUNT ACTIVATION
+       */
+
+      const passwordSet =
+        customer.passwordSet === true;
+
+      const accountActivated =
+        customer.accountActivated === true;
+
+      console.log(
+        "Password set:",
+        passwordSet
+      );
+
+      console.log(
+        "Account activated:",
+        accountActivated
+      );
+
+      /*
+       * NOT ACTIVATED
+       */
+
+      if (
+        !passwordSet ||
+        !accountActivated
+      ) {
         Alert.alert(
-          "Password Required",
-          "Please enter your password."
+          "Account Not Activated",
+          "Your account has not been activated yet. Please create your password first.",
+          [
+            {
+              text: "Continue",
+              onPress: () => {
+                navigation.replace(
+                  "CreatePassword",
+                  {
+                    phoneNumber,
+                  }
+                );
+              },
+            },
+          ]
         );
 
         return;
       }
 
-      try {
-        setLoading(true);
+      /*
+       * FIREBASE AUTH IDENTIFIER
+       */
 
-        console.log(
-          "===================================="
-        );
-
-        console.log(
-          "CUSTOMER PASSWORD LOGIN"
-        );
-
-        console.log(
-          "Phone:",
+      const authIdentifier =
+        getFirebaseAuthIdentifier(
           phoneNumber
         );
 
-        console.log(
-          "===================================="
-        );
+      console.log(
+        "Using phone-based Firebase authentication."
+      );
 
-        /*
-         * ==============================
-         * FIND CUSTOMER
-         * ==============================
-         */
+      /*
+       * FIREBASE LOGIN
+       */
 
-        const usersRef =
-          collection(
-            db,
-            "users"
-          );
+      await signInWithEmailAndPassword(
+        auth,
+        authIdentifier,
+        password
+      );
 
-        const customerQuery =
-          query(
-            usersRef,
-            where(
-              "phone",
-              "==",
-              phoneNumber
-            )
-          );
+      console.log(
+        "===================================="
+      );
 
-        const snapshot =
-          await getDocs(
-            customerQuery
-          );
+      console.log(
+        "CUSTOMER LOGIN SUCCESS"
+      );
 
-        console.log(
-          "Customer found:",
-          !snapshot.empty
-        );
+      console.log(
+        "Phone:",
+        phoneNumber
+      );
 
-        /*
-         * ==============================
-         * CUSTOMER NOT FOUND
-         * ==============================
-         */
+      console.log(
+        "Firebase authentication successful."
+      );
 
-        if (snapshot.empty) {
-          Alert.alert(
-            "Account Not Found",
-            "We could not find your Pristine Eye Care account."
-          );
+      console.log(
+        "===================================="
+      );
 
-          return;
-        }
+      /*
+       * DASHBOARD
+       */
 
-        /*
-         * ==============================
-         * GET CUSTOMER
-         * ==============================
-         */
+      navigation.replace(
+        "Dashboard"
+      );
+    } catch (error: any) {
+      console.log(
+        "===================================="
+      );
 
-        const customerDoc =
-          snapshot.docs[0];
+      console.log(
+        "PASSWORD LOGIN ERROR"
+      );
 
-        const customer =
-          customerDoc.data();
+      console.log(
+        "Code:",
+        error?.code
+      );
 
-        console.log(
-          "Customer document:",
-          customerDoc.id
-        );
+      console.log(
+        "Message:",
+        error?.message
+      );
 
-        console.log(
-          "Customer data:",
-          customer
-        );
+      console.log(
+        "===================================="
+      );
 
-        /*
-         * ==============================
-         * CHECK ACCOUNT ACTIVATION
-         * ==============================
-         */
+      let message =
+        "Unable to sign in. Please try again.";
 
-        const passwordSet =
-          customer.passwordSet ===
-          true;
+      /*
+       * FIREBASE ERROR HANDLING
+       */
 
-        const accountActivated =
-          customer.accountActivated ===
-          true;
+      switch (
+        error?.code
+      ) {
+        case "auth/invalid-credential":
 
-        console.log(
-          "Password set:",
-          passwordSet
-        );
+        case "auth/wrong-password":
 
-        console.log(
-          "Account activated:",
-          accountActivated
-        );
+        case "auth/user-not-found":
 
-        /*
-         * ==============================
-         * NOT ACTIVATED
-         * ==============================
-         */
+          message =
+            "Incorrect password. Please try again.";
 
-        if (
-          !passwordSet ||
-          !accountActivated
-        ) {
-          Alert.alert(
-            "Account Not Activated",
-            "Your account has not been activated yet. Please create your password first.",
-            [
-              {
-                text: "Continue",
-                onPress: () => {
-                  navigation.replace(
-                    "CreatePassword",
-                    {
-                      phoneNumber,
-                    }
-                  );
-                },
-              },
-            ]
-          );
+          break;
 
-          return;
-        }
+        case "auth/too-many-requests":
 
-        /*
-         * ==============================
-         * INTERNAL FIREBASE IDENTIFIER
-         * ==============================
-         */
+          message =
+            "Too many unsuccessful attempts. Please wait a while and try again.";
 
-        const authIdentifier =
-          getFirebaseAuthIdentifier(
-            phoneNumber
-          );
+          break;
 
-        console.log(
-          "Using phone-based Firebase authentication."
-        );
+        case "auth/network-request-failed":
 
-        /*
-         * ==============================
-         * FIREBASE LOGIN
-         * ==============================
-         */
+          message =
+            "Unable to connect to the server. Please check your internet connection.";
 
-        await signInWithEmailAndPassword(
-          auth,
-          authIdentifier,
-          password
-        );
+          break;
 
-        console.log(
-          "===================================="
-        );
+        case "auth/user-disabled":
 
-        console.log(
-          "CUSTOMER LOGIN SUCCESS"
-        );
+          message =
+            "This account has been disabled. Please contact Pristine Eye Care.";
 
-        console.log(
-          "Phone:",
-          phoneNumber
-        );
+          break;
 
-        console.log(
-          "Firebase authentication successful."
-        );
+        case "auth/invalid-email":
 
-        console.log(
-          "===================================="
-        );
+          message =
+            "We could not authenticate this account. Please contact Pristine Eye Care.";
 
-        /*
-         * ==============================
-         * DASHBOARD
-         * ==============================
-         */
+          break;
 
-        navigation.replace(
-          "Dashboard"
-        );
-      } catch (error: any) {
-        console.log(
-          "===================================="
-        );
+        default:
 
-        console.log(
-          "PASSWORD LOGIN ERROR"
-        );
-
-        console.log(
-          "Code:",
-          error?.code
-        );
-
-        console.log(
-          "Message:",
-          error?.message
-        );
-
-        console.log(
-          "===================================="
-        );
-
-        let message =
-          "Unable to sign in. Please try again.";
-
-        /*
-         * ==============================
-         * FIREBASE ERROR HANDLING
-         * ==============================
-         */
-
-        switch (
-          error?.code
-        ) {
-          case "auth/invalid-credential":
-
-          case "auth/wrong-password":
-
-          case "auth/user-not-found":
-
-            message =
-              "Incorrect password. Please try again.";
-
-            break;
-
-          case "auth/too-many-requests":
-
-            message =
-              "Too many unsuccessful attempts. Please wait a while and try again.";
-
-            break;
-
-          case "auth/network-request-failed":
-
-            message =
-              "Unable to connect to the server. Please check your internet connection.";
-
-            break;
-
-          case "auth/user-disabled":
-
-            message =
-              "This account has been disabled. Please contact Pristine Eye Care.";
-
-            break;
-
-          case "auth/invalid-email":
-
-            message =
-              "We could not authenticate this account. Please contact Pristine Eye Care.";
-
-            break;
-
-          default:
-
-            message =
-              "Unable to sign in. Please check your password and try again.";
-        }
-
-        Alert.alert(
-          "Login Failed",
-          message
-        );
-      } finally {
-        setLoading(false);
+          message =
+            "Unable to sign in. Please check your password and try again.";
       }
-    };
+
+      Alert.alert(
+        "Login Failed",
+        message
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
   /*
    * ========================================
@@ -439,6 +405,7 @@ export default function EnterPasswordScreen({
             false
           }
         >
+
           {/* BACK BUTTON */}
 
           <Pressable
@@ -478,9 +445,11 @@ export default function EnterPasswordScreen({
           {/* TITLE */}
 
           <Text
-            style={styles.title}
+            style={
+              styles.title
+            }
           >
-            Welcome Back
+            Enter Password
           </Text>
 
           <Text
@@ -488,8 +457,8 @@ export default function EnterPasswordScreen({
               styles.subtitle
             }
           >
-            Enter your password to access
-            your Pristine Eye Care account.
+            Enter your password to continue
+            to your Pristine Eye Care account.
           </Text>
 
           {/* PHONE */}
@@ -600,6 +569,7 @@ export default function EnterPasswordScreen({
             Your password is securely
             managed by Pristine Eye Care.
           </Text>
+
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -614,6 +584,7 @@ export default function EnterPasswordScreen({
 
 const styles =
   StyleSheet.create({
+
     container: {
       flex: 1,
       backgroundColor:
@@ -750,4 +721,5 @@ const styles =
       marginTop: 22,
       paddingHorizontal: 15,
     },
+
   });
