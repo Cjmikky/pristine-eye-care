@@ -1,4 +1,5 @@
 import React from "react";
+
 import {
   createNativeStackNavigator,
 } from "@react-navigation/native-stack";
@@ -7,6 +8,8 @@ import SplashScreen from "../screens/SplashScreen";
 import LoginScreen from "../screens/LoginScreen";
 import SignupScreen from "../screens/SignupScreen";
 import ForgotPasswordScreen from "../screens/ForgotPasswordScreen";
+import CreatePasswordScreen from "../screens/CreatePasswordScreen";
+import EnterPasswordScreen from "../screens/EnterPasswordScreen";
 import NotificationsScreen from "../screens/NotificationsScreen";
 import ChatScreen from "../screens/ChatScreen";
 import UpcomingEventScreen from "../screens/UpcomingEventScreen";
@@ -15,12 +18,31 @@ import BottomNavigator from "./BottomNavigator";
 
 export type RootStackParamList = {
   Splash: undefined;
+
   Login: undefined;
-  Signup: undefined;
+
+  Signup:
+    | {
+        phoneNumber?: string;
+      }
+    | undefined;
+
+  CreatePassword: {
+    phoneNumber: string;
+  };
+
+  EnterPassword: {
+    phoneNumber: string;
+  };
+
   ForgotPassword: undefined;
+
   Dashboard: undefined;
+
   Notifications: undefined;
+
   Chat: undefined;
+
   UpcomingEvent: undefined;
 };
 
@@ -48,6 +70,16 @@ export default function AppNavigator() {
       <Stack.Screen
         name="Signup"
         component={SignupScreen}
+      />
+
+      <Stack.Screen
+        name="CreatePassword"
+        component={CreatePasswordScreen}
+      />
+
+      <Stack.Screen
+        name="EnterPassword"
+        component={EnterPasswordScreen}
       />
 
       <Stack.Screen

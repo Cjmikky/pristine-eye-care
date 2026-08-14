@@ -21,19 +21,9 @@ console.log("====================================");
 
 const app = initializeApp(firebaseConfig);
 
-console.log(
-  "Firebase App Initialized Successfully"
-);
+console.log("Firebase App Initialized Successfully");
 
-/*
- * Firebase 12.17.0 does not expose
- * getReactNativePersistence in its TypeScript
- * declarations, even though the runtime supports it.
- *
- * We therefore load it dynamically.
- */
-const firebaseAuth =
-  require("firebase/auth") as any;
+const firebaseAuth = require("firebase/auth") as any;
 
 const getReactNativePersistence =
   firebaseAuth.getReactNativePersistence;
@@ -53,6 +43,10 @@ export const db = getFirestore(app);
 
 console.log(
   "Firestore Initialized Successfully"
+);
+
+console.log(
+  "Firestore transport: Forced Long Polling"
 );
 
 export const storage = getStorage(app);
