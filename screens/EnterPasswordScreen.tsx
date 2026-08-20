@@ -1,4 +1,7 @@
-import React, { useState } from "react";
+import React, {
+  useEffect,
+  useState,
+} from "react";
 
 import {
   SafeAreaView,
@@ -30,6 +33,10 @@ import {
 
 import Ionicons from "@expo/vector-icons/Ionicons";
 
+import * as LocalAuthentication from "expo-local-authentication";
+
+import * as SecureStore from "expo-secure-store";
+
 import Logo from "../components/Logo";
 import InputField from "../components/InputField";
 
@@ -52,8 +59,32 @@ const PRIMARY = "#B3000F";
 
 /*
  * ========================================
+ * SECURE STORE KEYS
+ * ========================================
+ */
+
+const BIOMETRIC_ENABLED_KEY =
+  "pristine_biometric_enabled";
+
+const BIOMETRIC_EMAIL_KEY =
+  "pristine_biometric_email";
+
+const BIOMETRIC_PASSWORD_KEY =
+  "pristine_biometric_password";
+
+/*
+ * ========================================
  * INTERNAL FIREBASE AUTH IDENTIFIER
  * ========================================
+ *
+ * The customer logs in using their phone
+ * number.
+ *
+ * Firebase internally uses:
+ *
+ * 08038948686@pristine-auth.local
+ *
+ * This is never displayed to the customer.
  */
 
 const getFirebaseAuthIdentifier = (
@@ -80,299 +111,832 @@ export default function EnterPasswordScreen({
     setLoading,
   ] = useState(false);
 
+  const [
+    biometricLoading,
+    setBiometricLoading,
+  ] = useState(false);
+
+  const [
+    biometricAvailable,
+    setBiometricAvailable,
+  ] = useState(false);
+
+  const [
+    biometricEnabled,
+    setBiometricEnabled,
+  ] = useState(false);
+
   /*
    * ========================================
-   * LOGIN
+   * CHECK BIOMETRIC SUPPORT
    * ========================================
    */
 
-  const handleLogin = async () => {
-    if (loading) {
-      return;
-    }
+  useEffect(() => {
+    checkBiometricAvailability();
+  }, []);
 
-    /*
-     * PASSWORD VALIDATION
-     */
+  const checkBiometricAvailability =
+    async () => {
+      try {
+        if (
+          Platform.OS === "web"
+        ) {
+          return;
+        }
 
-    if (!password.trim()) {
-      Alert.alert(
-        "Password Required",
-        "Please enter your password."
-      );
+        const hasHardware =
+          await LocalAuthentication.hasHardwareAsync();
 
-      return;
-    }
+        const isEnrolled =
+          await LocalAuthentication.isEnrolledAsync();
 
-    try {
-      setLoading(true);
+        const supportedTypes =
+          await LocalAuthentication.supportedAuthenticationTypesAsync();
 
-      console.log(
-        "===================================="
-      );
+        const hasFingerprint =
+          supportedTypes.includes(
+            LocalAuthentication.AuthenticationType
+              .FINGERPRINT
+          );
 
-      console.log(
-        "CUSTOMER PASSWORD LOGIN"
-      );
+        /*
+         * We allow fingerprint specifically
+         * on Android.
+         *
+         * On iOS, Face ID / Touch ID is also
+         * supported.
+         */
 
-      console.log(
-        "Phone:",
-        phoneNumber
-      );
+        const available =
+          hasHardware &&
+          isEnrolled &&
+          (
+            Platform.OS === "android"
+              ? hasFingerprint
+              : supportedTypes.length > 0
+          );
 
-      console.log(
-        "===================================="
-      );
-
-      /*
-       * FIND CUSTOMER
-       */
-
-      const usersRef =
-        collection(
-          db,
-          "users"
+        setBiometricAvailable(
+          available
         );
 
-      const customerQuery =
-        query(
-          usersRef,
-          where(
-            "phone",
-            "==",
+        /*
+         * Check whether this customer has
+         * previously enabled biometric login.
+         */
+
+        const enabled =
+          await SecureStore.getItemAsync(
+            BIOMETRIC_ENABLED_KEY
+          );
+
+        const savedEmail =
+          await SecureStore.getItemAsync(
+            BIOMETRIC_EMAIL_KEY
+          );
+
+        /*
+         * Only enable the button if the
+         * saved biometric account belongs
+         * to this phone number.
+         */
+
+        const expectedEmail =
+          getFirebaseAuthIdentifier(
             phoneNumber
-          )
+          );
+
+        setBiometricEnabled(
+          enabled === "true" &&
+          savedEmail === expectedEmail
+        );
+      } catch (error) {
+        console.log(
+          "Biometric availability check failed:",
+          error
         );
 
-      const snapshot =
-        await getDocs(
-          customerQuery
+        setBiometricAvailable(
+          false
         );
 
-      console.log(
-        "Customer found:",
-        !snapshot.empty
-      );
-
-      /*
-       * CUSTOMER NOT FOUND
-       */
-
-      if (snapshot.empty) {
-        Alert.alert(
-          "Account Not Found",
-          "We could not find your Pristine Eye Care account."
+        setBiometricEnabled(
+          false
         );
-
-        return;
       }
+    };
 
-      /*
-       * GET CUSTOMER
-       */
+  /*
+   * ========================================
+   * SAVE BIOMETRIC CREDENTIALS
+   * ========================================
+   *
+   * The password is stored only inside
+   * SecureStore and protected by the device's
+   * authentication mechanism.
+   *
+   * It is NEVER stored in AsyncStorage,
+   * Firestore or plain text files.
+   */
 
-      const customerDoc =
-        snapshot.docs[0];
+  const saveBiometricCredentials =
+    async (
+      authIdentifier: string,
+      userPassword: string
+    ) => {
+      try {
+        await SecureStore.setItemAsync(
+          BIOMETRIC_EMAIL_KEY,
+          authIdentifier
+        );
 
-      const customer =
-        customerDoc.data();
+        await SecureStore.setItemAsync(
+          BIOMETRIC_PASSWORD_KEY,
+          userPassword,
+          {
+            requireAuthentication:
+              true,
 
-      console.log(
-        "Customer document:",
-        customerDoc.id
-      );
+            authenticationPrompt:
+              "Authenticate to enable fingerprint login for Pristine Eye Care.",
+          }
+        );
 
-      console.log(
-        "Customer data:",
-        customer
-      );
+        await SecureStore.setItemAsync(
+          BIOMETRIC_ENABLED_KEY,
+          "true"
+        );
 
-      /*
-       * CHECK ACCOUNT ACTIVATION
-       */
+        setBiometricEnabled(
+          true
+        );
 
-      const passwordSet =
-        customer.passwordSet === true;
+        console.log(
+          "Biometric login enabled successfully."
+        );
 
-      const accountActivated =
-        customer.accountActivated === true;
+        return true;
+      } catch (error) {
+        console.log(
+          "Failed to save biometric credentials:",
+          error
+        );
 
-      console.log(
-        "Password set:",
-        passwordSet
-      );
+        /*
+         * Clean up partially stored data.
+         */
 
-      console.log(
-        "Account activated:",
-        accountActivated
-      );
+        try {
+          await SecureStore.deleteItemAsync(
+            BIOMETRIC_EMAIL_KEY
+          );
 
-      /*
-       * NOT ACTIVATED
-       */
+          await SecureStore.deleteItemAsync(
+            BIOMETRIC_PASSWORD_KEY
+          );
 
+          await SecureStore.deleteItemAsync(
+            BIOMETRIC_ENABLED_KEY
+          );
+        } catch (
+          cleanupError
+        ) {
+          console.log(
+            "Biometric cleanup error:",
+            cleanupError
+          );
+        }
+
+        return false;
+      }
+    };
+
+  /*
+   * ========================================
+   * BIOMETRIC LOGIN
+   * ========================================
+   */
+
+  const handleBiometricLogin =
+    async () => {
       if (
-        !passwordSet ||
-        !accountActivated
+        biometricLoading ||
+        loading
       ) {
-        Alert.alert(
-          "Account Not Activated",
-          "Your account has not been activated yet. Please create your password first.",
-          [
-            {
-              text: "Continue",
-              onPress: () => {
-                navigation.replace(
-                  "CreatePassword",
-                  {
-                    phoneNumber,
-                  }
-                );
-              },
-            },
-          ]
-        );
-
         return;
       }
 
-      /*
-       * FIREBASE AUTH IDENTIFIER
-       */
+      try {
+        setBiometricLoading(
+          true
+        );
 
-      const authIdentifier =
-        getFirebaseAuthIdentifier(
+        /*
+         * Confirm that biometric hardware
+         * is still available.
+         */
+
+        const hasHardware =
+          await LocalAuthentication.hasHardwareAsync();
+
+        const isEnrolled =
+          await LocalAuthentication.isEnrolledAsync();
+
+        if (
+          !hasHardware ||
+          !isEnrolled
+        ) {
+          Alert.alert(
+            "Fingerprint Unavailable",
+            "Please set up a fingerprint on your phone and try again."
+          );
+
+          return;
+        }
+
+        /*
+         * Ask the device to authenticate.
+         */
+
+        const result =
+          await LocalAuthentication.authenticateAsync(
+            {
+              promptMessage:
+                "Sign in to Pristine Eye Care",
+
+              promptDescription:
+                "Use your fingerprint to securely sign in.",
+
+              cancelLabel:
+                "Cancel",
+
+              disableDeviceFallback:
+                false,
+
+              requireConfirmation:
+                true,
+
+              biometricsSecurityLevel:
+                "strong",
+            }
+          );
+
+        if (
+          !result.success
+        ) {
+          console.log(
+            "Biometric authentication failed:",
+            result.error
+          );
+
+          if (
+            result.error ===
+              "user_cancel" ||
+            result.error ===
+              "system_cancel" ||
+            result.error ===
+              "app_cancel"
+          ) {
+            return;
+          }
+
+          Alert.alert(
+            "Fingerprint Login Failed",
+            "Fingerprint authentication was not successful. Please try again or use your password."
+          );
+
+          return;
+        }
+
+        /*
+         * ====================================
+         * GET SECURE CREDENTIALS
+         * ====================================
+         */
+
+        const savedEmail =
+          await SecureStore.getItemAsync(
+            BIOMETRIC_EMAIL_KEY
+          );
+
+        const savedPassword =
+          await SecureStore.getItemAsync(
+            BIOMETRIC_PASSWORD_KEY,
+            {
+              requireAuthentication:
+                true,
+
+              authenticationPrompt:
+                "Authenticate to sign in to Pristine Eye Care.",
+            }
+          );
+
+        if (
+          !savedEmail ||
+          !savedPassword
+        ) {
+          /*
+           * The credentials may have been
+           * invalidated because the user changed
+           * their fingerprint settings.
+           */
+
+          await SecureStore.deleteItemAsync(
+            BIOMETRIC_EMAIL_KEY
+          );
+
+          await SecureStore.deleteItemAsync(
+            BIOMETRIC_PASSWORD_KEY
+          );
+
+          await SecureStore.deleteItemAsync(
+            BIOMETRIC_ENABLED_KEY
+          );
+
+          setBiometricEnabled(
+            false
+          );
+
+          Alert.alert(
+            "Fingerprint Login Unavailable",
+            "Your biometric login needs to be enabled again. Please sign in with your password."
+          );
+
+          return;
+        }
+
+        /*
+         * Make sure the stored account belongs
+         * to the current phone number.
+         */
+
+        const expectedEmail =
+          getFirebaseAuthIdentifier(
+            phoneNumber
+          );
+
+        if (
+          savedEmail !==
+          expectedEmail
+        ) {
+          Alert.alert(
+            "Account Mismatch",
+            "The saved fingerprint login belongs to another account. Please sign in with your password."
+          );
+
+          return;
+        }
+
+        /*
+         * ====================================
+         * FIREBASE LOGIN
+         * ====================================
+         */
+
+        await signInWithEmailAndPassword(
+          auth,
+          savedEmail,
+          savedPassword
+        );
+
+        console.log(
+          "===================================="
+        );
+
+        console.log(
+          "BIOMETRIC LOGIN SUCCESS"
+        );
+
+        console.log(
+          "Phone:",
           phoneNumber
         );
 
-      console.log(
-        "Using phone-based Firebase authentication."
-      );
+        console.log(
+          "===================================="
+        );
 
-      /*
-       * FIREBASE LOGIN
-       */
+        navigation.replace(
+          "Dashboard"
+        );
+      } catch (error: any) {
+        console.log(
+          "===================================="
+        );
 
-      await signInWithEmailAndPassword(
-        auth,
-        authIdentifier,
-        password
-      );
+        console.log(
+          "BIOMETRIC LOGIN ERROR"
+        );
 
-      console.log(
-        "===================================="
-      );
+        console.log(
+          "Code:",
+          error?.code
+        );
 
-      console.log(
-        "CUSTOMER LOGIN SUCCESS"
-      );
+        console.log(
+          "Message:",
+          error?.message
+        );
 
-      console.log(
-        "Phone:",
-        phoneNumber
-      );
+        console.log(
+          "===================================="
+        );
 
-      console.log(
-        "Firebase authentication successful."
-      );
+        /*
+         * SecureStore can throw when the
+         * biometric enrollment changes.
+         */
 
-      console.log(
-        "===================================="
-      );
+        if (
+          error?.message?.includes(
+            "authentication"
+          ) ||
+          error?.message?.includes(
+            "biometric"
+          )
+        ) {
+          Alert.alert(
+            "Fingerprint Login Failed",
+            "Please use your password to sign in."
+          );
+        } else {
+          Alert.alert(
+            "Login Failed",
+            "Unable to sign in with fingerprint. Please use your password."
+          );
+        }
+      } finally {
+        setBiometricLoading(
+          false
+        );
+      }
+    };
 
-      /*
-       * DASHBOARD
-       */
+  /*
+   * ========================================
+   * PASSWORD LOGIN
+   * ========================================
+   */
 
-      navigation.replace(
-        "Dashboard"
-      );
-    } catch (error: any) {
-      console.log(
-        "===================================="
-      );
-
-      console.log(
-        "PASSWORD LOGIN ERROR"
-      );
-
-      console.log(
-        "Code:",
-        error?.code
-      );
-
-      console.log(
-        "Message:",
-        error?.message
-      );
-
-      console.log(
-        "===================================="
-      );
-
-      let message =
-        "Unable to sign in. Please try again.";
-
-      /*
-       * FIREBASE ERROR HANDLING
-       */
-
-      switch (
-        error?.code
-      ) {
-        case "auth/invalid-credential":
-
-        case "auth/wrong-password":
-
-        case "auth/user-not-found":
-
-          message =
-            "Incorrect password. Please try again.";
-
-          break;
-
-        case "auth/too-many-requests":
-
-          message =
-            "Too many unsuccessful attempts. Please wait a while and try again.";
-
-          break;
-
-        case "auth/network-request-failed":
-
-          message =
-            "Unable to connect to the server. Please check your internet connection.";
-
-          break;
-
-        case "auth/user-disabled":
-
-          message =
-            "This account has been disabled. Please contact Pristine Eye Care.";
-
-          break;
-
-        case "auth/invalid-email":
-
-          message =
-            "We could not authenticate this account. Please contact Pristine Eye Care.";
-
-          break;
-
-        default:
-
-          message =
-            "Unable to sign in. Please check your password and try again.";
+  const handleLogin =
+    async () => {
+      if (loading) {
+        return;
       }
 
-      Alert.alert(
-        "Login Failed",
-        message
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
+      /*
+       * PASSWORD VALIDATION
+       */
+
+      if (!password.trim()) {
+        Alert.alert(
+          "Password Required",
+          "Please enter your password."
+        );
+
+        return;
+      }
+
+      try {
+        setLoading(true);
+
+        console.log(
+          "===================================="
+        );
+
+        console.log(
+          "CUSTOMER PASSWORD LOGIN"
+        );
+
+        console.log(
+          "Phone:",
+          phoneNumber
+        );
+
+        console.log(
+          "===================================="
+        );
+
+        /*
+         * ====================================
+         * FIND CUSTOMER
+         * ====================================
+         */
+
+        const usersRef =
+          collection(
+            db,
+            "users"
+          );
+
+        const customerQuery =
+          query(
+            usersRef,
+            where(
+              "phone",
+              "==",
+              phoneNumber
+            )
+          );
+
+        const snapshot =
+          await getDocs(
+            customerQuery
+          );
+
+        console.log(
+          "Customer found:",
+          !snapshot.empty
+        );
+
+        /*
+         * CUSTOMER NOT FOUND
+         */
+
+        if (
+          snapshot.empty
+        ) {
+          Alert.alert(
+            "Account Not Found",
+            "We could not find your Pristine Eye Care account."
+          );
+
+          return;
+        }
+
+        /*
+         * ====================================
+         * GET CUSTOMER
+         * ====================================
+         */
+
+        const customerDoc =
+          snapshot.docs[0];
+
+        const customer =
+          customerDoc.data();
+
+        console.log(
+          "Customer document:",
+          customerDoc.id
+        );
+
+        console.log(
+          "Customer data:",
+          customer
+        );
+
+        /*
+         * ====================================
+         * CHECK ACCOUNT ACTIVATION
+         * ====================================
+         */
+
+        const passwordSet =
+          customer.passwordSet ===
+          true;
+
+        const accountActivated =
+          customer.accountActivated ===
+          true;
+
+        console.log(
+          "Password set:",
+          passwordSet
+        );
+
+        console.log(
+          "Account activated:",
+          accountActivated
+        );
+
+        /*
+         * NOT ACTIVATED
+         */
+
+        if (
+          !passwordSet ||
+          !accountActivated
+        ) {
+          Alert.alert(
+            "Account Not Activated",
+            "Your account has not been activated yet. Please create your password first.",
+            [
+              {
+                text: "Continue",
+
+                onPress: () => {
+                  navigation.replace(
+                    "CreatePassword",
+                    {
+                      phoneNumber,
+                    }
+                  );
+                },
+              },
+            ]
+          );
+
+          return;
+        }
+
+        /*
+         * ====================================
+         * FIREBASE IDENTIFIER
+         * ====================================
+         */
+
+        const authIdentifier =
+          getFirebaseAuthIdentifier(
+            phoneNumber
+          );
+
+        /*
+         * ====================================
+         * FIREBASE LOGIN
+         * ====================================
+         */
+
+        await signInWithEmailAndPassword(
+          auth,
+          authIdentifier,
+          password
+        );
+
+        console.log(
+          "===================================="
+        );
+
+        console.log(
+          "CUSTOMER LOGIN SUCCESS"
+        );
+
+        console.log(
+          "Phone:",
+          phoneNumber
+        );
+
+        console.log(
+          "Firebase authentication successful."
+        );
+
+        console.log(
+          "===================================="
+        );
+
+        /*
+         * ====================================
+         * ENABLE BIOMETRIC LOGIN
+         * ====================================
+         *
+         * We only ask if biometric hardware
+         * is available.
+         */
+
+        if (
+          biometricAvailable &&
+          !biometricEnabled
+        ) {
+          Alert.alert(
+            "Enable Fingerprint Login?",
+            "Use your fingerprint next time to sign in faster and securely.",
+            [
+              {
+                text: "Not Now",
+                style: "cancel",
+
+                onPress: () => {
+                  navigation.replace(
+                    "Dashboard"
+                  );
+                },
+              },
+
+              {
+                text: "Enable",
+
+                onPress:
+                  async () => {
+                    const saved =
+                      await saveBiometricCredentials(
+                        authIdentifier,
+                        password
+                      );
+
+                    if (
+                      !saved
+                    ) {
+                      Alert.alert(
+                        "Fingerprint Setup Failed",
+                        "Your account was signed in successfully, but fingerprint login could not be enabled."
+                      );
+                    }
+
+                    navigation.replace(
+                      "Dashboard"
+                    );
+                  },
+              },
+            ]
+          );
+        } else {
+          /*
+           * ==================================
+           * DASHBOARD
+           * ==================================
+           */
+
+          navigation.replace(
+            "Dashboard"
+          );
+        }
+      } catch (error: any) {
+        console.log(
+          "===================================="
+        );
+
+        console.log(
+          "PASSWORD LOGIN ERROR"
+        );
+
+        console.log(
+          "Code:",
+          error?.code
+        );
+
+        console.log(
+          "Message:",
+          error?.message
+        );
+
+        console.log(
+          "===================================="
+        );
+
+        let message =
+          "Unable to sign in. Please try again.";
+
+        /*
+         * FIREBASE ERROR HANDLING
+         */
+
+        switch (
+          error?.code
+        ) {
+          case "auth/invalid-credential":
+
+          case "auth/wrong-password":
+
+          case "auth/user-not-found":
+
+            message =
+              "Incorrect password. Please try again.";
+
+            break;
+
+          case "auth/too-many-requests":
+
+            message =
+              "Too many unsuccessful attempts. Please wait a while and try again.";
+
+            break;
+
+          case "auth/network-request-failed":
+
+            message =
+              "Unable to connect to the server. Please check your internet connection.";
+
+            break;
+
+          case "auth/user-disabled":
+
+            message =
+              "This account has been disabled. Please contact Pristine Eye Care.";
+
+            break;
+
+          case "auth/invalid-email":
+
+            message =
+              "We could not authenticate this account. Please contact Pristine Eye Care.";
+
+            break;
+
+          default:
+
+            message =
+              "Unable to sign in. Please check your password and try again.";
+        }
+
+        Alert.alert(
+          "Login Failed",
+          message
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
 
   /*
    * ========================================
@@ -405,7 +969,6 @@ export default function EnterPasswordScreen({
             false
           }
         >
-
           {/* BACK BUTTON */}
 
           <Pressable
@@ -415,7 +978,10 @@ export default function EnterPasswordScreen({
             onPress={() =>
               navigation.goBack()
             }
-            disabled={loading}
+            disabled={
+              loading ||
+              biometricLoading
+            }
           >
             <Ionicons
               name="arrow-back"
@@ -449,7 +1015,7 @@ export default function EnterPasswordScreen({
               styles.title
             }
           >
-            Enter Password
+            Enter Your Password
           </Text>
 
           <Text
@@ -457,8 +1023,8 @@ export default function EnterPasswordScreen({
               styles.subtitle
             }
           >
-            Enter your password to continue
-            to your Pristine Eye Care account.
+            Enter your password to access
+            your Pristine Eye Care account.
           </Text>
 
           {/* PHONE */}
@@ -506,7 +1072,10 @@ export default function EnterPasswordScreen({
             onChangeText={
               setPassword
             }
-            editable={!loading}
+            editable={
+              !loading &&
+              !biometricLoading
+            }
           />
 
           {/* FORGOT PASSWORD */}
@@ -517,12 +1086,18 @@ export default function EnterPasswordScreen({
                 "ForgotPassword"
               )
             }
-            disabled={loading}
+            disabled={
+              loading ||
+              biometricLoading
+            }
           >
             <Text
               style={[
                 styles.forgotPassword,
-                loading &&
+                (
+                  loading ||
+                  biometricLoading
+                ) &&
                   styles.disabledText,
               ]}
             >
@@ -536,10 +1111,16 @@ export default function EnterPasswordScreen({
             onPress={
               handleLogin
             }
-            disabled={loading}
+            disabled={
+              loading ||
+              biometricLoading
+            }
             style={[
               styles.loginButton,
-              loading &&
+              (
+                loading ||
+                biometricLoading
+              ) &&
                 styles.loginButtonDisabled,
             ]}
           >
@@ -559,6 +1140,57 @@ export default function EnterPasswordScreen({
             )}
           </Pressable>
 
+          {/* BIOMETRIC LOGIN */}
+
+          {biometricAvailable &&
+            biometricEnabled && (
+              <Pressable
+                onPress={
+                  handleBiometricLogin
+                }
+                disabled={
+                  loading ||
+                  biometricLoading
+                }
+                style={[
+                  styles.biometricButton,
+                  (
+                    loading ||
+                    biometricLoading
+                  ) &&
+                    styles.biometricButtonDisabled,
+                ]}
+              >
+                {biometricLoading ? (
+                  <ActivityIndicator
+                    size="small"
+                    color={PRIMARY}
+                  />
+                ) : (
+                  <>
+                    <Ionicons
+                      name={
+                        Platform.OS ===
+                        "ios"
+                          ? "scan-outline"
+                          : "finger-print-outline"
+                      }
+                      size={27}
+                      color={PRIMARY}
+                    />
+
+                    <Text
+                      style={
+                        styles.biometricButtonText
+                      }
+                    >
+                      Use Fingerprint
+                    </Text>
+                  </>
+                )}
+              </Pressable>
+            )}
+
           {/* SECURITY MESSAGE */}
 
           <Text
@@ -569,7 +1201,6 @@ export default function EnterPasswordScreen({
             Your password is securely
             managed by Pristine Eye Care.
           </Text>
-
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -584,7 +1215,6 @@ export default function EnterPasswordScreen({
 
 const styles =
   StyleSheet.create({
-
     container: {
       flex: 1,
       backgroundColor:
@@ -712,6 +1342,33 @@ const styles =
       fontWeight: "700",
     },
 
+    biometricButton: {
+      height: 52,
+      borderRadius: 12,
+      borderWidth: 1.5,
+      borderColor: PRIMARY,
+      backgroundColor:
+        "#FFF5F5",
+      alignItems:
+        "center",
+      justifyContent:
+        "center",
+      flexDirection:
+        "row",
+      marginTop: 12,
+    },
+
+    biometricButtonDisabled: {
+      opacity: 0.6,
+    },
+
+    biometricButtonText: {
+      color: PRIMARY,
+      fontSize: 16,
+      fontWeight: "700",
+      marginLeft: 9,
+    },
+
     securityText: {
       textAlign:
         "center",
@@ -721,5 +1378,4 @@ const styles =
       marginTop: 22,
       paddingHorizontal: 15,
     },
-
   });

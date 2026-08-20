@@ -21,10 +21,16 @@ import {
 } from "firebase/firestore";
 
 import { auth, db } from "../firebase/config";
+
 import {
   useTheme,
   ThemeColors,
 } from "../context/ThemeContext";
+
+import {
+  requestNotificationPermission,
+  scheduleAppointmentReminders,
+} from "../utils/appointmentNotifications";
 
 const PRIMARY = "#B3000F";
 
@@ -71,8 +77,7 @@ export default function AppointmentScreen() {
 
   const styles = createStyles(colors);
 
-  const [showForm, setShowForm] =
-    useState(false);
+  const [showForm, setShowForm] = useState(false);
 
   const [appointment, setAppointment] =
     useState<AppointmentData | null>(null);
@@ -89,11 +94,9 @@ export default function AppointmentScreen() {
   const [selectedTime, setSelectedTime] =
     useState("");
 
-  const [notes, setNotes] =
-    useState("");
+  const [notes, setNotes] = useState("");
 
-  const [submitting, setSubmitting] =
-    useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     const user = auth.currentUser;
@@ -108,11 +111,7 @@ export default function AppointmentScreen() {
 
     const appointmentQuery = query(
       collection(db, "appointments"),
-      where(
-        "patientId",
-        "==",
-        user.uid
-      )
+      where("patientId", "==", user.uid)
     );
 
     const unsubscribe = onSnapshot(
@@ -147,9 +146,7 @@ export default function AppointmentScreen() {
           return bTime - aTime;
         });
 
-        setAppointment(
-          appointments[0]
-        );
+        setAppointment(appointments[0]);
 
         setLoadingAppointment(false);
       },
@@ -179,8 +176,7 @@ export default function AppointmentScreen() {
     const date = new Date();
 
     date.setDate(
-      date.getDate() +
-        daysFromToday
+      date.getDate() + daysFromToday
     );
 
     return date.toLocaleDateString(
@@ -241,13 +237,9 @@ export default function AppointmentScreen() {
       setSubmitting(true);
 
       await addDoc(
-        collection(
-          db,
-          "appointments"
-        ),
+        collection(db, "appointments"),
         {
-          patientId:
-            user.uid,
+          patientId: user.uid,
 
           patientEmail:
             user.email || "",
@@ -274,6 +266,43 @@ export default function AppointmentScreen() {
             serverTimestamp(),
         }
       );
+
+      /*
+       * Request notification permission and
+       * schedule the appointment reminders.
+       *
+       * The reminders are stored locally on
+       * the patient's phone, so the patient's
+       * phone does not need to remain connected
+       * to the laptop.
+       */
+      try {
+        const notificationPermission =
+          await requestNotificationPermission();
+
+        if (notificationPermission) {
+          await scheduleAppointmentReminders(
+            selectedDate,
+            selectedTime,
+            selectedService
+          );
+        } else {
+          console.log(
+            "Notification permission was not granted."
+          );
+        }
+      } catch (notificationError) {
+        /*
+         * Notification failure should not make
+         * the appointment booking fail because
+         * the appointment has already been saved
+         * successfully to Firebase.
+         */
+        console.error(
+          "Appointment reminder scheduling error:",
+          notificationError
+        );
+      }
 
       setSelectedService("");
       setSelectedDate("");

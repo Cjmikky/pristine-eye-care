@@ -6,11 +6,9 @@
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "icon": "./assets/images/logo.png",
-
     "assetBundlePatterns": [
       "**/*"
     ],
-
     "android": {
       "package": "com.cjmikky.pristineeyecare",
       "adaptiveIcon": {
@@ -18,21 +16,27 @@
         "backgroundColor": "#FFFFFF"
       }
     },
-
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSFaceIDUsageDescription": "Pristine Eye Care uses Face ID to securely sign you into your account."
+      }
     },
-
     "web": {
       "favicon": "./assets/images/logo.png"
     },
-
     "plugins": [
       "expo-font",
       "expo-splash-screen",
-      "expo-notifications"
+      "expo-notifications",
+      "expo-secure-store",
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Pristine Eye Care uses Face ID to securely sign you into your account."
+        }
+      ]
     ],
-
     "extra": {
       "eas": {
         "projectId": "86092ca8-ac0b-4783-8df9-1f13b315c7a4"
